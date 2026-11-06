@@ -15,7 +15,7 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         }
     </script>
-    <!-- Supabase Client -->
+    <!-- Database Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -56,7 +56,7 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800">
 
-    <!-- LAYAR LOGIN SUPABASE AUTH -->
+    <!-- LAYAR LOGIN AUTH -->
     <div id="authScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
             <div class="text-center mb-6">
@@ -79,7 +79,7 @@
         </div>
     </div>
 
-    <!-- APLIKASI UTAMA (Tersembunyi sebelum login) -->
+    <!-- APLIKASI UTAMA -->
     <div id="mainApp" class="hidden flex flex-col min-h-screen">
         <!-- Header / Navbar -->
         <header class="bg-slate-900 text-white shadow-md no-print">
@@ -125,11 +125,13 @@
                 
                 <!-- Form Input (Kiri) -->
                 <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 no-print">
-                    <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-blue-600"></i> Pengaturan Dokumen Internal
+                    <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-600"></i> Pengaturan Dokumen Internal</span>
+                        <span id="formModeBadge" class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold hidden">Mode Edit</span>
                     </h2>
 
                     <form id="docForm" onsubmit="event.preventDefault();" class="space-y-4">
+                        <input type="hidden" id="editRecordId" value="">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Jenis Dokumen</label>
@@ -464,11 +466,11 @@
                 </div>
             </div>
 
-            <!-- TAB DATA PELANGGAN (SINKRON SUPABASE) -->
+            <!-- TAB DATA PELANGGAN -->
             <div id="tab-customers" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6 pb-2 border-b">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-users text-blue-600"></i> Daftar Data Pelanggan (Cloud Supabase)</h2>
+                        <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-users text-blue-600"></i> Daftar Data Pelanggan (Database)</h2>
                         <p class="text-xs text-slate-500">Kelola buku kontak pelanggan agar mudah dipilih saat membuat dokumen.</p>
                     </div>
                 </div>
@@ -545,7 +547,7 @@
             <div id="tab-history" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">Riwayat Dokumen Tersimpan (Cloud Supabase)</h2>
+                        <h2 class="text-lg font-bold text-slate-900">Riwayat Dokumen Tersimpan (Database)</h2>
                         <p class="text-xs text-slate-500">Daftar invoice dan kwitansi yang pernah dicetak secara online.</p>
                     </div>
                     <button onclick="clearHistory()" class="bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-2">
@@ -573,7 +575,7 @@
         </main>
     </div>
 
-    <!-- Script Utama (Supabase + Auth + Auto-Logout 30 Menit) -->
+    <!-- Script Utama -->
     <script>
         const SUPABASE_URL = "https://fhembzfaqprkjxmbzwuu.supabase.co";
         const SUPABASE_KEY = "sb_publishable_BQUtRnufelM9jUKi0bu69A_-y4J_ZHE";
@@ -710,14 +712,14 @@
                     configPayload.logo_data = e.target.result;
                     await _supabase.from('jsc_settings').upsert(configPayload);
                     applySettingsToUI();
-                    alert("Pengaturan dan logo berhasil disimpan ke Supabase!");
+                    alert("Pengaturan dan logo berhasil disimpan ke Database!");
                     switchTab('generator');
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
                 await _supabase.from('jsc_settings').upsert(configPayload);
                 applySettingsToUI();
-                alert("Pengaturan berhasil disimpan ke Supabase!");
+                alert("Pengaturan berhasil disimpan ke Database!");
                 switchTab('generator');
             }
         }
@@ -737,7 +739,7 @@
             }
         }
 
-        // --- DATA PELANGGAN VIA CLOUD SUPABASE ---
+        // --- DATA PELANGGAN VIA DATABASE ---
         async function getCustomers() {
             const { data, error } = await _supabase.from('jsc_customers').select('*').order('name', { ascending: true });
             if (error || !data) return [];
@@ -778,7 +780,7 @@
             const customers = await getCustomers();
             tbody.innerHTML = "";
             if (customers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Belum ada data pelanggan di Cloud.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Belum ada data pelanggan di Database.</td></tr>`;
                 return;
             }
             customers.forEach((c, index) => {
@@ -810,7 +812,7 @@
             document.getElementById('newCustAddress').value = '';
             await loadCustomerTable();
             await loadCustomerDropdown();
-            alert("Pelanggan berhasil disimpan ke Cloud Supabase!");
+            alert("Pelanggan berhasil disimpan ke Database!");
         }
 
         async function deleteCustomer(id) {
@@ -825,23 +827,42 @@
             }
         }
 
-        function generateAutoNumber() {
+        // --- PENOMORAN OTOMATIS BERDASARKAN DATABASE ---
+        async function generateAutoNumber() {
             const type = document.getElementById('docType').value;
             const prefix = (type === 'INVOICE') ? 'INV/JSC' : 'KWT/JSC';
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
+            const pattern = `${prefix}/${year}/${month}/`;
 
-            let counterKey = `jsc_counter_${type}_${year}_${month}`;
-            let lastSeq = parseInt(localStorage.getItem(counterKey)) || 0;
-            let nextSeq = lastSeq + 1;
-            let paddedSeq = String(nextSeq).padStart(3, '0');
+            const { data, error } = await _supabase
+                .from('jsc_history')
+                .select('number')
+                .like('number', `${pattern}%`)
+                .order('id', { ascending: false })
+                .limit(1);
 
+            let nextSeq = 1;
+            if (!error && data && data.length > 0) {
+                const lastNumStr = data[0].number;
+                const parts = lastNumStr.split('/');
+                const lastSeqNum = parseInt(parts[parts.length - 1], 10);
+                if (!isNaN(lastSeqNum)) {
+                    nextSeq = lastSeqNum + 1;
+                }
+            }
+
+            const paddedSeq = String(nextSeq).padStart(3, '0');
             return `${prefix}/${year}/${month}/${paddedSeq}`;
         }
 
-        function initFormNumber() {
-            document.getElementById('docNumber').value = generateAutoNumber();
+        async function initFormNumber() {
+            const editId = document.getElementById('editRecordId').value;
+            if (!editId) {
+                const autoNum = await generateAutoNumber();
+                document.getElementById('docNumber').value = autoNum;
+            }
             loadCustomerDropdown();
             generatePreview();
         }
@@ -892,7 +913,7 @@
             }
         }
 
-        function updateDocType() {
+        async function updateDocType() {
             const type = document.getElementById('docType').value;
             const kwitansiField = document.getElementById('kwitansiField');
             const invoiceFields = document.getElementById('invoiceFields');
@@ -913,7 +934,7 @@
                 previewKwitansiSec.classList.add('hidden');
                 previewTotalSec.classList.remove('hidden');
             }
-            initFormNumber();
+            await initFormNumber();
         }
 
         function updateServiceCategory() {
@@ -1065,20 +1086,14 @@
 
         async function saveAndPrint() {
             await generatePreview();
+            const editId = document.getElementById('editRecordId').value;
             const docType = document.getElementById('docType').value;
             const docNumber = document.getElementById('docNumber').value;
             const docDate = document.getElementById('docDate').value;
             const clientName = document.getElementById('clientName').value || 'Pelanggan Umum';
             const total = docType === 'INVOICE' ? calculateTotal() : (parseFloat(document.querySelector('.price-input')?.value) || 1500000);
 
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            let counterKey = `jsc_counter_${docType}_${year}_${month}`;
-            let lastSeq = parseInt(localStorage.getItem(counterKey)) || 0;
-            localStorage.setItem(counterKey, lastSeq + 1);
-
-            const newRecord = {
+            const recordData = {
                 type: docType,
                 number: docNumber,
                 date: docDate,
@@ -1086,14 +1101,21 @@
                 total: total
             };
 
-            await _supabase.from('jsc_history').insert([newRecord]);
+            if (editId) {
+                await _supabase.from('jsc_history').update(recordData).eq('id', editId);
+                document.getElementById('editRecordId').value = '';
+                document.getElementById('formModeBadge').classList.add('hidden');
+            } else {
+                await _supabase.from('jsc_history').insert([recordData]);
+            }
 
             window.print();
-            initFormNumber();
+            await initFormNumber();
         }
 
         async function downloadPDFInternal() {
             await generatePreview();
+            const editId = document.getElementById('editRecordId').value;
             const docType = document.getElementById('docType').value; 
             const serviceCat = document.getElementById('serviceCategory').value; 
             const catName = serviceCat === 'TIKET' ? 'Pesawat' : 'Hotel';
@@ -1103,14 +1125,7 @@
             const docDate = document.getElementById('docDate').value;
             const total = docType === 'INVOICE' ? calculateTotal() : (parseFloat(document.querySelector('.price-input')?.value) || 1500000);
 
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            let counterKey = `jsc_counter_${docType}_${year}_${month}`;
-            let lastSeq = parseInt(localStorage.getItem(counterKey)) || 0;
-            localStorage.setItem(counterKey, lastSeq + 1);
-
-            const newRecord = {
+            const recordData = {
                 type: docType,
                 number: docNumber,
                 date: docDate,
@@ -1118,7 +1133,13 @@
                 total: total
             };
 
-            await _supabase.from('jsc_history').insert([newRecord]);
+            if (editId) {
+                await _supabase.from('jsc_history').update(recordData).eq('id', editId);
+                document.getElementById('editRecordId').value = '';
+                document.getElementById('formModeBadge').classList.add('hidden');
+            } else {
+                await _supabase.from('jsc_history').insert([recordData]);
+            }
 
             const fileName = `${docType}-${catName}-${cleanClientName}.pdf`;
             const element = document.getElementById('print-area');
@@ -1131,21 +1152,21 @@
             };
 
             html2pdf().from(element).set(options).save();
-            initFormNumber();
+            await initFormNumber();
         }
 
         async function initExternalDoc() {
-            const autoNum = generateAutoNumber();
+            const autoNum = await generateAutoNumber();
             updateExtDate();
             
             const config = await getSettings();
             generateQRCode(`VALID-EXT|${config.companyName}|${autoNum}|Direktur:${config.directorName}`, "extQrcode", "80");
         }
 
-        function updateExtDate() {
+        async function updateExtDate() {
             const extDateVal = document.getElementById('extDocDate').value;
             const formattedExtDate = extDateVal ? new Date(extDateVal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
-            const autoNum = generateAutoNumber();
+            const autoNum = await generateAutoNumber();
             document.getElementById('extPrevDocNumber').innerText = "No: " + autoNum;
             document.getElementById('extPrevDocDate').innerText = "Tanggal: " + formattedExtDate;
             
@@ -1244,17 +1265,18 @@
 
         async function loadHistory() {
             const historyTableBody = document.getElementById('historyTableBody');
-            historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Memuat data dari Supabase...</td></tr>`;
+            historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Memuat data dari Database...</td></tr>`;
             
             const { data, error } = await _supabase.from('jsc_history').select('*').order('id', { ascending: false });
             
             historyTableBody.innerHTML = "";
             if (error || !data || data.length === 0) {
-                historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Belum ada riwayat dokumen tersimpan di Cloud.</td></tr>`;
+                historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Belum ada riwayat dokumen tersimpan di Database.</td></tr>`;
                 return;
             }
 
             data.forEach((item) => {
+                const itemJson = encodeURIComponent(JSON.stringify(item));
                 historyTableBody.innerHTML += `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3">${item.date || '-'}</td>
@@ -1262,12 +1284,32 @@
                         <td class="p-3 font-semibold">${item.number}</td>
                         <td class="p-3">${item.client}</td>
                         <td class="p-3 text-right font-bold text-slate-900">${formatRupiah(item.total)}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="deleteHistoryItem(${item.id})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                        <td class="p-3 text-center space-x-1">
+                            <button onclick="editHistoryItem('${itemJson}')" class="text-blue-500 hover:text-blue-700 px-2 py-1" title="Edit Dokumen"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteHistoryItem(${item.id})" class="text-red-500 hover:text-red-700 px-2 py-1" title="Hapus Dokumen"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
+        }
+
+        function editHistoryItem(encodedItem) {
+            const item = JSON.parse(decodeURIComponent(encodedItem));
+            switchTab('generator');
+
+            document.getElementById('editRecordId').value = item.id;
+            document.getElementById('formModeBadge').classList.remove('hidden');
+            document.getElementById('docType').value = item.type === 'KWITANSI' ? 'KWITANSI' : 'INVOICE';
+            updateDocType();
+
+            document.getElementById('docNumber').value = item.number;
+            if (item.date) document.getElementById('docDate').value = item.date;
+            document.getElementById('clientName').value = item.client;
+            
+            const firstPrice = document.querySelector('.price-input');
+            if (firstPrice) firstPrice.value = item.total;
+
+            generatePreview();
         }
 
         async function deleteHistoryItem(id) {
@@ -1278,7 +1320,7 @@
         }
 
         async function clearHistory() {
-            if (confirm("Apakah Anda yakin ingin menghapus SEMUA histori dokumen dari Cloud?")) {
+            if (confirm("Apakah Anda yakin ingin menghapus SEMUA histori dokumen dari Database?")) {
                 await _supabase.from('jsc_history').delete().neq('id', 0);
                 loadHistory();
             }
@@ -1286,7 +1328,7 @@
 
         async function initApp() {
             await applySettingsToUI();
-            initFormNumber();
+            await initFormNumber();
             document.getElementById('extPreviewNotes').innerText = document.getElementById('extDocNotes').value;
         }
 
