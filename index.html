@@ -22,7 +22,7 @@
             }
             .no-print { display: none !important; }
         }
-        /* Perbaikan Presisi Tampilan Dokumen agar Tidak Melebar ke Kanan */
+        /* Perbaikan Presisi Lebar Kontainer Dokumen agar Standar A4 dan Tidak Ada Sisa Kosong di Kanan */
         .invoice-container {
             width: 100%;
             max-width: 210mm;
@@ -130,7 +130,6 @@
                         <div id="itemDetailsContainer" class="space-y-3 pt-2 border-t">
                             <h3 class="text-xs font-bold text-slate-700 uppercase">Rincian Transaksi</h3>
                             <div id="dynamicItems" class="space-y-2">
-                                <!-- Item baris dinamis -->
                                 <div class="grid grid-cols-12 gap-2 item-row">
                                     <input type="text" placeholder="Deskripsi Layanan" class="col-span-7 px-2.5 py-1.5 border rounded-lg text-xs desc-input" value="Tiket Pesawat CGK - PLM (PP)">
                                     <input type="number" placeholder="Harga" class="col-span-4 px-2.5 py-1.5 border rounded-lg text-xs price-input" value="1500000" oninput="calculateTotal()">
@@ -141,7 +140,7 @@
                         </div>
 
                         <div class="pt-4 border-t flex gap-2">
-                            <button onclick="triggerSaveAndPrint()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition"><i class="fa-solid fa-print mr-1"></i> Simpan & Cetak</button>
+                            <button onclick="triggerSaveAndPrint()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition"><i class="fa-solid fa-print mr-1"></i> Cetak / Simpan</button>
                             <button onclick="triggerDownloadPDF()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow transition"><i class="fa-solid fa-file-pdf mr-1"></i> Download PDF</button>
                         </div>
                     </div>
@@ -206,7 +205,6 @@
                                     <p class="text-[10px] text-slate-500">Muara Padang, <span id="signDate"></span></p>
                                     <p id="prevDirectorTitle" class="font-bold text-slate-800 text-xs mt-1">Direktur Utama</p>
                                     <div class="h-14 flex items-center justify-center">
-                                        <!-- Logo / Paraf / Stempel opsional -->
                                         <span class="text-[10px] text-slate-300 italic">[ Tanda Tangan & Stempel ]</span>
                                     </div>
                                     <p id="prevDirectorName" class="font-black text-slate-900 text-xs underline decoration-blue-600 underline-offset-2">Tri Aniza Oktarina</p>
@@ -229,7 +227,7 @@
                         <p class="text-xs text-slate-400">Pratinjau dokumen luar akan tampil di sini</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="printExternalFile()" class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-print mr-1"></i> Cetak / Simpan ke Histori</button>
+                        <button onclick="printExternalFile()" class="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-print mr-1"></i> Cetak & Simpan Histori</button>
                         <button onclick="downloadExternalPDF()" class="flex-1 py-2.5 bg-slate-800 text-white rounded-xl text-xs font-bold shadow"><i class="fa-solid fa-file-pdf mr-1"></i> Download PDF & Simpan</button>
                     </div>
                 </div>
@@ -512,6 +510,7 @@
             return temp.trim();
         }
 
+        // --- FITUR REVISI: OTOMATIS SIMPAN KE HISTORI UNTUK SEMUA TOMBOL ---
         async function saveToHistoryDatabase() {
             const record = {
                 type: document.getElementById('docType').value,
@@ -676,6 +675,10 @@
         }
 
         window.onload = checkSession;
+    </script>
+</body>
+</html>
+ion;
     </script>
 </body>
 </html>
