@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSC Tour & Travel - Invoice & Kwitansi Generator</title>
     <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> <!-- Menggunakan Tailwind modern / CDN terupdate -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2pdf.js Library untuk Export PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -374,12 +375,26 @@
             <!-- TAB UPLOAD INVOICE LUAR -->
             <div id="tab-external" class="hidden grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
                 <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 no-print h-fit">
-                    <div class="mb-4 pb-2 border-b">
-                        <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-file-arrow-up text-blue-600"></i> Upload Invoice Luar</h2>
-                        <p class="text-xs text-slate-500 mt-1">Kop di atas, dokumen di tengah dengan pengesahan watermark di pojok bawah dalam 1 lembar A4.</p>
+                    <div class="mb-4 pb-2 border-b flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-file-arrow-up text-blue-600"></i> Upload Invoice Luar</h2>
+                            <p class="text-xs text-slate-500 mt-1">Kop di atas, dokumen di tengah dengan pengesahan watermark dalam 1 lembar A4.</p>
+                        </div>
+                        <div>
+                            <span id="extFormModeBadge" class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold hidden">Mode Edit</span>
+                            <button type="button" onclick="cancelExtEdit()" id="extCancelEditBtn" class="text-[10px] bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-0.5 rounded font-bold hidden">Batal</button>
+                        </div>
                     </div>
 
                     <form onsubmit="event.preventDefault();" class="space-y-4">
+                        <input type="hidden" id="extEditRecordId" value="">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Kategori Layanan Eksternal</label>
+                            <select id="extServiceCategory" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="TIKET">Tiket Pesawat</option>
+                                <option value="HOTEL">Hotel</option>
+                            </select>
+                        </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Pilih File (PDF / Gambar)</label>
                             <input type="file" id="extFile" accept=".pdf,image/*" onchange="embedFileToDocument(this)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
@@ -612,7 +627,7 @@
 
         async function handleLogout() {
             await _supabase.auth.signOut();
-            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
         }
 
@@ -877,6 +892,13 @@
             initFormNumber();
         }
 
+        function cancelExtEdit() {
+            document.getElementById('extEditRecordId').value = '';
+            document.getElementById('extFormModeBadge').classList.add('hidden');
+            document.getElementById('extCancelEditBtn').classList.add('hidden');
+            initExternalDoc();
+        }
+
         function generateQRCode(textData, targetId = "qrcode", size = "120") {
             const container = document.getElementById(targetId);
             if(container) {
@@ -910,7 +932,9 @@
                 extTab.classList.remove('hidden');
                 btnExt.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
                 loadCustomerDropdown();
-                initExternalDoc();
+                if (!document.getElementById('extEditRecordId').value) {
+                    initExternalDoc();
+                }
             } else if (tabName === 'customers') {
                 custTab.classList.remove('hidden');
                 btnCust.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
@@ -1175,18 +1199,21 @@
         }
 
         async function initExternalDoc() {
-            const autoNum = await generateAutoNumber();
+            const editId = document.getElementById('extEditRecordId').value;
+            if (!editId) {
+                const autoNum = await generateAutoNumber();
+                document.getElementById('extPrevDocNumber').innerText = "No: " + autoNum;
+            }
             updateExtDate();
             
             const config = await getSettings();
-            generateQRCode(`VALID-EXT|${config.companyName}|${autoNum}|Direktur:${config.directorName}`, "extQrcode", "80");
+            const docNum = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "");
+            generateQRCode(`VALID-EXT|${config.companyName}|${docNum}|Direktur:${config.directorName}`, "extQrcode", "80");
         }
 
         async function updateExtDate() {
             const extDateVal = document.getElementById('extDocDate').value;
             const formattedExtDate = extDateVal ? new Date(extDateVal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
-            const autoNum = await generateAutoNumber();
-            document.getElementById('extPrevDocNumber').innerText = "No: " + autoNum;
             document.getElementById('extPrevDocDate').innerText = "Tanggal: " + formattedExtDate;
             
             const extNotesVal = document.getElementById('extDocNotes').value;
@@ -1233,8 +1260,10 @@
             const customerId = document.getElementById('extSelectCustomer').value;
             const extTotal = parseFloat(document.getElementById('extTotal').value) || 0;
             const extDateVal = document.getElementById('extDocDate').value;
+            const editId = document.getElementById('extEditRecordId').value;
+            const serviceCat = document.getElementById('extServiceCategory').value; // TIKET atau HOTEL
 
-            if (!fileInput.files || !fileInput.files[0]) {
+            if (!fileInput.files || !fileInput.files[0] && !editId) {
                 alert("Harap lampirkan file invoice terlebih dahulu.");
                 return null;
             }
@@ -1247,29 +1276,43 @@
             const selectedCust = customers.find(c => c.id == customerId);
             const autoNumber = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "");
 
-            const newRecord = {
+            const recordData = {
                 type: 'INVOICE LUAR',
                 number: autoNumber,
                 date: extDateVal,
                 client: selectedCust ? selectedCust.name : 'Pelanggan Eksternal',
-                total: extTotal
+                total: extTotal,
+                service_category: serviceCat // Menyimpan kategori layanan eksternal
             };
 
-            await _supabase.from('jsc_history').insert([newRecord]);
-            return selectedCust ? selectedCust.name : 'Pelanggan Eksternal';
+            if (editId) {
+                await _supabase.from('jsc_history').update(recordData).eq('id', editId);
+                document.getElementById('extEditRecordId').value = '';
+                document.getElementById('extFormModeBadge').classList.add('hidden');
+                document.getElementById('extCancelEditBtn').classList.add('hidden');
+            } else {
+                await _supabase.from('jsc_history').insert([recordData]);
+            }
+
+            return {
+                custName: selectedCust ? selectedCust.name : 'Pelanggan-Eksternal',
+                serviceCategory: serviceCat
+            };
         }
 
         async function printSinglePageExternal() {
-            const custName = await saveExtRecord();
-            if (!custName) return;
+            const res = await saveExtRecord();
+            if (!res) return;
             setTimeout(() => { window.print(); }, 300);
+            await initExternalDoc();
         }
 
         async function downloadPDFSinglePageExternal() {
-            const custName = await saveExtRecord();
-            if (!custName) return;
-            const cleanCustName = custName.replace(/[^a-zA-Z0-9]/g, '-');
-            const fileName = `Invoice-Luar-${cleanCustName}.pdf`;
+            const res = await saveExtRecord();
+            if (!res) return;
+            const cleanCustName = res.custName.replace(/[^a-zA-Z0-9]/g, '-');
+            const catName = res.serviceCategory === 'HOTEL' ? 'Hotel' : 'Tiket';
+            const fileName = `Invoice-Eks-${catName}-${cleanCustName}.pdf`;
 
             const element = document.getElementById('print-area-external');
             const options = {
@@ -1280,6 +1323,7 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             setTimeout(() => { html2pdf().from(element).set(options).save(); }, 300);
+            await initExternalDoc();
         }
 
         async function loadHistory() {
@@ -1314,99 +1358,178 @@
             });
         }
 
-        function editHistoryItem(encodedItem) {
+        async function editHistoryItem(encodedItem) {
             const item = JSON.parse(decodeURIComponent(encodedItem));
             
-            // 1. Tampilkan tab generator secara manual tanpa memanggil fungsi switchTab yang mereset form
-            const genTab = document.getElementById('tab-generator');
-            const extTab = document.getElementById('tab-external');
-            const custTab = document.getElementById('tab-customers');
-            const setTab = document.getElementById('tab-settings');
-            const histTab = document.getElementById('tab-history');
-            
-            [genTab, extTab, custTab, setTab, histTab].forEach(t => t.classList.add('hidden'));
-            genTab.classList.remove('hidden');
+            // Periksa apakah ini dokumen Invoice Luar atau Internal
+            if (item.type === 'INVOICE LUAR') {
+                // Buka tab Upload Invoice Luar
+                const genTab = document.getElementById('tab-generator');
+                const extTab = document.getElementById('tab-external');
+                const custTab = document.getElementById('tab-customers');
+                const setTab = document.getElementById('tab-settings');
+                const histTab = document.getElementById('tab-history');
+                
+                [genTab, extTab, custTab, setTab, histTab].forEach(t => t.classList.add('hidden'));
+                extTab.classList.remove('hidden');
 
-            ['nav-generator', 'nav-external', 'nav-customers', 'nav-settings', 'nav-history'].forEach(id => {
-                document.getElementById(id).className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-            });
-            document.getElementById('nav-generator').className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
+                ['nav-generator', 'nav-external', 'nav-customers', 'nav-settings', 'nav-history'].forEach(id => {
+                    document.getElementById(id).className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
+                });
+                document.getElementById('nav-external').className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
 
-            // 2. Set nilai edit dan mode edit
-            document.getElementById('editRecordId').value = item.id;
-            document.getElementById('formModeBadge').classList.remove('hidden');
-            document.getElementById('cancelEditBtn').classList.remove('hidden');
-            
-            document.getElementById('docType').value = (item.type === 'KWITANSI') ? 'KWITANSI' : 'INVOICE';
-            
-            // Atur tampilan form berdasarkan jenis dokumen tanpa mereset nomor
-            const type = document.getElementById('docType').value;
-            const kwitansiField = document.getElementById('kwitansiField');
-            const invoiceFields = document.getElementById('invoiceFields');
-            const previewInvoiceSec = document.getElementById('previewInvoiceSection');
-            const previewKwitansiSec = document.getElementById('previewKwitansiSection');
-            const previewTotalSec = document.getElementById('previewTotalSection');
+                document.getElementById('extEditRecordId').value = item.id;
+                document.getElementById('extFormModeBadge').classList.remove('hidden');
+                document.getElementById('extCancelEditBtn').classList.remove('hidden');
 
-            if (type === 'KWITANSI') {
-                kwitansiField.classList.remove('hidden');
-                invoiceFields.classList.add('hidden');
-                previewInvoiceSec.classList.add('hidden');
-                previewKwitansiSec.classList.remove('hidden');
-                previewTotalSec.classList.add('hidden');
+                if (item.service_category) {
+                    document.getElementById('extServiceCategory').value = item.service_category;
+                }
+
+                document.getElementById('extPrevDocNumber').innerText = "No: " + item.number;
+                if (item.date) document.getElementById('extDocDate').value = item.date;
+                document.getElementById('extTotal').value = item.total;
+
+                await loadCustomerDropdown();
+                const customers = await getCustomers();
+                const matchedCust = customers.find(c => c.name === item.client);
+                if (matchedCust) {
+                    document.getElementById('extSelectCustomer').value = matchedCust.id;
+                }
+                updateExtDate();
+
             } else {
-                kwitansiField.classList.add('hidden');
-                invoiceFields.classList.remove('hidden');
-                previewInvoiceSec.classList.remove('hidden');
-                previewKwitansiSec.classList.add('hidden');
-                previewTotalSec.classList.remove('hidden');
+                // Dokumen Internal (Invoice / Kwitansi)
+                const genTab = document.getElementById('tab-generator');
+                const extTab = document.getElementById('tab-external');
+                const custTab = document.getElementById('tab-customers');
+                const setTab = document.getElementById('tab-settings');
+                const histTab = document.getElementById('tab-history');
+                
+                [genTab, extTab, custTab, setTab, histTab].forEach(t => t.classList.add('hidden'));
+                genTab.classList.remove('hidden');
+
+                ['nav-generator', 'nav-external', 'nav-customers', 'nav-settings', 'nav-history'].forEach(id => {
+                    document.getElementById(id).className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
+                });
+                document.getElementById('nav-generator').className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
+
+                document.getElementById('editRecordId').value = item.id;
+                document.getElementById('formModeBadge').classList.remove('hidden');
+                document.getElementById('cancelEditBtn').classList.remove('hidden');
+                
+                document.getElementById('docType').value = (item.type === 'KWITANSI') ? 'KWITANSI' : 'INVOICE';
+                
+                const type = document.getElementById('docType').value;
+                const kwitansiField = document.getElementById('kwitansiField');
+                const invoiceFields = document.getElementById('invoiceFields');
+                const previewInvoiceSec = document.getElementById('previewInvoiceSection');
+                const previewKwitansiSec = document.getElementById('previewKwitansiSection');
+                const previewTotalSec = document.getElementById('previewTotalSection');
+
+                if (type === 'KWITANSI') {
+                    kwitansiField.classList.remove('hidden');
+                    invoiceFields.classList.add('hidden');
+                    previewInvoiceSec.classList.add('hidden');
+                    previewKwitansiSec.classList.remove('hidden');
+                    previewTotalSec.classList.add('hidden');
+                } else {
+                    kwitansiField.classList.add('hidden');
+                    invoiceFields.classList.remove('hidden');
+                    previewInvoiceSec.classList.remove('hidden');
+                    previewKwitansiSec.classList.add('hidden');
+                    previewTotalSec.classList.remove('hidden');
+                }
+
+                document.getElementById('docNumber').value = item.number;
+                if (item.date) document.getElementById('docDate').value = item.date;
+                document.getElementById('clientName').value = item.client;
+                
+                const firstPrice = document.querySelector('.price-input');
+                if (firstPrice) firstPrice.value = item.total;
+
+                loadCustomerDropdown();
+                generatePreview();
             }
-
-            // 3. Masukkan nomor dokumen asli tanpa ter-overwrite nomor baru
-            document.getElementById('docNumber').value = item.number;
-            if (item.date) document.getElementById('docDate').value = item.date;
-            document.getElementById('clientName').value = item.client;
-            
-            const firstPrice = document.querySelector('.price-input');
-            if (firstPrice) firstPrice.value = item.total;
-
-            loadCustomerDropdown();
-            generatePreview();
         }
 
         async function reprintHistoryItem(encodedItem, actionType) {
             const item = JSON.parse(decodeURIComponent(encodedItem));
             
-            document.getElementById('editRecordId').value = item.id;
-            document.getElementById('docType').value = (item.type === 'KWITANSI') ? 'KWITANSI' : 'INVOICE';
-            updateDocType();
-            document.getElementById('docNumber').value = item.number;
-            if (item.date) document.getElementById('docDate').value = item.date;
-            document.getElementById('clientName').value = item.client;
-            
-            const firstPrice = document.querySelector('.price-input');
-            if (firstPrice) firstPrice.value = item.total;
-
-            await generatePreview();
-
-            setTimeout(() => {
-                if (actionType === 'print') {
-                    window.print();
-                } else {
-                    const cleanClientName = (item.client || 'Pelanggan').replace(/[^a-zA-Z0-9]/g, '-');
-                    const fileName = `${item.type}-${cleanClientName}.pdf`;
-                    const element = document.getElementById('print-area');
-                    const options = {
-                        margin: 0,
-                        filename: fileName,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, logging: false },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                    };
-                    html2pdf().from(element).set(options).save();
+            if (item.type === 'INVOICE LUAR') {
+                document.getElementById('extEditRecordId').value = item.id;
+                if (item.service_category) {
+                    document.getElementById('extServiceCategory').value = item.service_category;
                 }
-                document.getElementById('editRecordId').value = '';
-                initFormNumber();
-            }, 300);
+                document.getElementById('extPrevDocNumber').innerText = "No: " + item.number;
+                if (item.date) document.getElementById('extDocDate').value = item.date;
+                document.getElementById('extTotal').value = item.total;
+                
+                await loadCustomerDropdown();
+                const customers = await getCustomers();
+                const matchedCust = customers.find(c => c.name === item.client);
+                if (matchedCust) {
+                    document.getElementById('extSelectCustomer').value = matchedCust.id;
+                }
+                updateExtDate();
+
+                setTimeout(() => {
+                    if (actionType === 'print') {
+                        window.print();
+                    } else {
+                        const cleanClientName = (item.client || 'Pelanggan').replace(/[^a-zA-Z0-9]/g, '-');
+                        const serviceCat = item.service_category || 'TIKET';
+                        const catName = serviceCat === 'HOTEL' ? 'Hotel' : 'Tiket';
+                        const fileName = `Invoice-Eks-${catName}-${cleanClientName}.pdf`;
+                        const element = document.getElementById('print-area-external');
+                        const options = {
+                            margin: 0,
+                            filename: fileName,
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2, useCORS: true, logging: false },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        };
+                        html2pdf().from(element).set(options).save();
+                    }
+                    document.getElementById('extEditRecordId').value = '';
+                    initExternalDoc();
+                }, 300);
+
+            } else {
+                document.getElementById('editRecordId').value = item.id;
+                document.getElementById('docType').value = (item.type === 'KWITANSI') ? 'KWITANSI' : 'INVOICE';
+                updateDocType();
+                document.getElementById('docNumber').value = item.number;
+                if (item.date) document.getElementById('docDate').value = item.date;
+                document.getElementById('clientName').value = item.client;
+                
+                const firstPrice = document.querySelector('.price-input');
+                if (firstPrice) firstPrice.value = item.total;
+
+                await generatePreview();
+
+                setTimeout(() => {
+                    if (actionType === 'print') {
+                        window.print();
+                    } else {
+                        const cleanClientName = (item.client || 'Pelanggan').replace(/[^a-zA-Z0-9]/g, '-');
+                        const serviceCat = document.getElementById('serviceCategory').value;
+                        const catName = serviceCat === 'TIKET' ? 'Pesawat' : 'Hotel';
+                        const fileName = `${item.type}-${catName}-${cleanClientName}.pdf`;
+                        const element = document.getElementById('print-area');
+                        const options = {
+                            margin: 0,
+                            filename: fileName,
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2, useCORS: true, logging: false },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        };
+                        html2pdf().from(element).set(options).save();
+                    }
+                    document.getElementById('editRecordId').value = '';
+                    initFormNumber();
+                }, 300);
+            }
         }
 
         async function deleteHistoryItem(id) {
