@@ -119,10 +119,8 @@
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-8 grow w-full">
 
-            <!-- TAB GENERATOR (BUAT DOKUMEN INTERNAL) -->
+            <!-- TAB GENERATOR -->
             <div id="tab-generator" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                <!-- Form Input (Kiri) -->
                 <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 no-print">
                     <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-blue-600"></i> Pengaturan Dokumen Internal
@@ -157,7 +155,6 @@
                             </div>
                         </div>
 
-                        <!-- Pilih Pelanggan -->
                         <div>
                             <div class="flex justify-between items-center mb-1">
                                 <label class="text-xs font-semibold uppercase tracking-wider text-slate-600">Pilih Pelanggan / Pemesan</label>
@@ -178,7 +175,6 @@
                             <textarea id="clientAddress" rows="2" placeholder="Alamat Pelanggan" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
                         </div>
 
-                        <!-- KONTROL KHUSUS TIKET PESAWAT -->
                         <div id="flightFields" class="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <p class="text-xs font-bold text-slate-700 uppercase"><i class="fa-solid fa-plane text-blue-600"></i> Detail Tiket Pesawat</p>
                             <div class="grid grid-cols-2 gap-2">
@@ -197,7 +193,6 @@
                             </div>
                         </div>
 
-                        <!-- KONTROL KHUSUS HOTEL -->
                         <div id="hotelFields" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <p class="text-xs font-bold text-slate-700 uppercase"><i class="fa-solid fa-hotel text-blue-600"></i> Detail Reservasi Hotel</p>
                             <div>
@@ -216,7 +211,6 @@
                             </div>
                         </div>
 
-                        <!-- Bagian khusus Kwitansi -->
                         <div id="kwitansiField" class="hidden space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <div>
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Telah Diterima Dari</label>
@@ -228,7 +222,6 @@
                             </div>
                         </div>
 
-                        <!-- Rincian Item (Invoice) -->
                         <div id="invoiceFields">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-xs font-semibold uppercase tracking-wider text-slate-600">Rincian Biaya</label>
@@ -265,7 +258,7 @@
                     </form>
                 </div>
 
-                <!-- Preview Dokumen (Kanan) -->
+                <!-- Preview Dokumen -->
                 <div class="lg:col-span-7 flex justify-center">
                     <div id="print-area" class="bg-white w-full max-w-2xl p-8 rounded-2xl shadow-md border border-slate-200 text-slate-800 flex flex-col justify-between min-h-[820px]">
                         <div>
@@ -278,7 +271,7 @@
                                     <div>
                                         <h2 id="previewCompanyName" class="text-lg font-black tracking-wider text-slate-900">JSC TOUR & TRAVEL</h2>
                                         <p id="previewCompanyLegal" class="text-xs font-bold text-blue-600">PT JUNAVOKA SOLUTIONS CENTER</p>
-                                        <p id="previewCompanyAddress" class="text-[10px] text-slate-500 mt-0.5">Jl. Contoh Alamat No. 1, Kota Palembang</p>
+                                        <p id="previewCompanyAddress" class="text-[10px] text-slate-500 mt-0.5">Jl. Desa Air Gading No. 001, RT 001 RW 001, Desa Air Gading, Kec. Muara Padang, Kab. Banyuasin, 30975</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -415,7 +408,7 @@
                                     <div>
                                         <h2 id="extPrevCompanyName" class="text-xs font-black tracking-wider text-slate-900">JSC TOUR & TRAVEL</h2>
                                         <p id="extPrevCompanyLegal" class="text-[9px] font-bold text-blue-600">PT JUNAVOKA SOLUTIONS CENTER</p>
-                                        <p id="extPrevCompanyAddress" class="text-[8px] text-slate-500">Jl. Contoh Alamat No. 1, Kota Palembang</p>
+                                        <p id="extPrevCompanyAddress" class="text-[8px] text-slate-500">Jl. Desa Air Gading No. 001, RT 001 RW 001, Desa Air Gading, Kec. Muara Padang, Kab. Banyuasin, 30975</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -506,7 +499,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Alamat Kantor</label>
-                        <textarea id="settingCompanyAddress" rows="2" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">Jl. Contoh Alamat No. 1, Kota Palembang</textarea>
+                        <textarea id="settingCompanyAddress" rows="2" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">Jl. Desa Air Gading No. 001, RT 001 RW 001, Desa Air Gading, Kec. Muara Padang, Kab. Banyuasin, 30975</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Nama Direktur</label>
@@ -527,7 +520,7 @@
                 </form>
             </div>
 
-            <!-- TAB HISTORI LOKAL -->
+            <!-- TAB HISTORI -->
             <div id="tab-history" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex justify-between items-center mb-6">
                     <div>
@@ -566,6 +559,23 @@
         
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // AUTO-LOGOUT INACTIVITY TIMER (30 Menit)
+        let inactivityTimeout;
+        const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 Menit
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimeout);
+            inactivityTimeout = setTimeout(async () => {
+                await _supabase.auth.signOut();
+                alert("Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali.");
+                showLoginScreen();
+            }, INACTIVITY_LIMIT);
+        }
+
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+            window.addEventListener(event, resetInactivityTimer, true);
+        });
 
         // LOGIC AUTHENTICATION
         async function handleLogin(e) {
@@ -612,30 +622,42 @@
             document.getElementById('btnLoginSubmit').innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi';
         }
 
-        function showAppScreen() {
+        async function showAppScreen() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
             document.getElementById('app-screen').classList.add('flex');
-            applySettingsToUI();
+            await applySettingsToUI();
             initFormNumber();
+            resetInactivityTimer();
         }
 
-        // LOGIC APLIKASI
+        // PENGATURAN PERUSAHAAN SUPABASE
         const defaultConfig = {
             companyName: "JSC TOUR & TRAVEL",
             companyLegal: "PT JUNAVOKA SOLUTIONS CENTER",
-            companyAddress: "Jl. Contoh Alamat No. 1, Kota Palembang",
+            companyAddress: "Jl. Desa Air Gading No. 001, RT 001 RW 001, Desa Air Gading, Kec. Muara Padang, Kab. Banyuasin, 30975",
             directorName: "Tri Aima Oktarina",
             logoData: ""
         };
 
-        function getSettings() {
-            const saved = localStorage.getItem('jsc_settings');
-            return saved ? JSON.parse(saved) : defaultConfig;
+        async function getSettings() {
+            try {
+                const { data, error } = await _supabase.from('jsc_settings').select('*').eq('id', 1).single();
+                if (error || !data) return defaultConfig;
+                return {
+                    companyName: data.company_name || defaultConfig.companyName,
+                    companyLegal: data.company_legal || defaultConfig.companyLegal,
+                    companyAddress: data.company_address || defaultConfig.companyAddress,
+                    directorName: data.director_name || defaultConfig.directorName,
+                    logoData: data.logo_data || defaultConfig.logoData
+                };
+            } catch (err) {
+                return defaultConfig;
+            }
         }
 
-        function applySettingsToUI() {
-            const config = getSettings();
+        async function applySettingsToUI() {
+            const config = await getSettings();
             document.getElementById('navCompanyName').innerText = config.companyName;
             document.getElementById('navCompanySub').innerText = config.companyLegal;
             document.getElementById('previewCompanyName').innerText = config.companyName;
@@ -678,71 +700,87 @@
             });
         }
 
-        function saveSettings() {
+        async function saveSettings() {
             const fileInput = document.getElementById('settingLogoFile');
-            const config = {
-                companyName: document.getElementById('settingCompanyName').value,
-                companyLegal: document.getElementById('settingCompanyLegal').value,
-                companyAddress: document.getElementById('settingCompanyAddress').value,
-                directorName: document.getElementById('settingDirectorName').value,
-                logoData: getSettings().logoData
+            const currentConfig = await getSettings();
+            
+            const configData = {
+                id: 1,
+                company_name: document.getElementById('settingCompanyName').value,
+                company_legal: document.getElementById('settingCompanyLegal').value,
+                company_address: document.getElementById('settingCompanyAddress').value,
+                director_name: document.getElementById('settingDirectorName').value,
+                logo_data: currentConfig.logoData
+            };
+
+            const saveToSupabase = async (payload) => {
+                const { error } = await _supabase.from('jsc_settings').upsert(payload);
+                if (error) {
+                    alert("Gagal menyimpan ke database: " + error.message);
+                } else {
+                    alert("Pengaturan berhasil disimpan ke database Supabase!");
+                    await applySettingsToUI();
+                    switchTab('generator');
+                }
             };
 
             if (fileInput.files && fileInput.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    config.logoData = e.target.result;
-                    localStorage.setItem('jsc_settings', JSON.stringify(config));
-                    applySettingsToUI();
-                    alert("Pengaturan dan logo berhasil disimpan!");
-                    switchTab('generator');
+                reader.onload = async function(e) {
+                    configData.logo_data = e.target.result;
+                    await saveToSupabase(configData);
                 };
                 reader.readAsDataURL(fileInput.files[0]);
             } else {
-                localStorage.setItem('jsc_settings', JSON.stringify(config));
-                applySettingsToUI();
-                alert("Pengaturan berhasil disimpan!");
-                switchTab('generator');
+                await saveToSupabase(configData);
             }
         }
 
-        function resetSettings() {
+        async function resetSettings() {
             if (confirm("Kembalikan pengaturan ke awal?")) {
-                localStorage.removeItem('jsc_settings');
-                applySettingsToUI();
-                alert("Pengaturan telah direset.");
+                const { error } = await _supabase.from('jsc_settings').upsert({
+                    id: 1,
+                    company_name: defaultConfig.companyName,
+                    company_legal: defaultConfig.companyLegal,
+                    company_address: defaultConfig.companyAddress,
+                    director_name: defaultConfig.directorName,
+                    logo_data: defaultConfig.logoData
+                });
+                if (!error) {
+                    await applySettingsToUI();
+                    alert("Pengaturan telah direset ke default.");
+                }
             }
         }
 
-        function getCustomers() {
-            let customers = JSON.parse(localStorage.getItem('jsc_customers'));
-            if (!customers) {
-                customers = [
-                    { name: "Bpk. Budi Santoso", address: "Jl. Jenderal Sudirman No. 123, Palembang" },
-                    { name: "Ibu Siti Aminah", address: "Jl. Kolonel H. Barlian No. 45, Palembang" }
-                ];
-                localStorage.setItem('jsc_customers', JSON.stringify(customers));
+        // PELANGGAN SUPABASE
+        async function getCustomers() {
+            try {
+                const { data, error } = await _supabase.from('jsc_customers').select('*').order('id', { ascending: false });
+                if (error) throw error;
+                return data || [];
+            } catch (err) {
+                return [];
             }
-            return customers;
         }
 
-        function loadCustomerDropdown() {
+        async function loadCustomerDropdown() {
             const selects = [document.getElementById('selectCustomer'), document.getElementById('extSelectCustomer')];
-            const customers = getCustomers();
+            const customers = await getCustomers();
             selects.forEach(sel => {
                 if (sel) {
                     sel.innerHTML = '<option value="">-- Pilih dari Daftar Pelanggan --</option>';
-                    customers.forEach((c, index) => {
-                        sel.innerHTML += `<option value="${index}">${c.name}</option>`;
+                    customers.forEach((c) => {
+                        sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
                     });
                 }
             });
         }
 
-        function onSelectCustomer(index) {
-            if (index === "") return;
-            const customers = getCustomers();
-            const cust = customers[index];
+        async function onSelectCustomer(id) {
+            if (id === "") return;
+            const customers = await getCustomers();
+            const cust = customers.find(c => c.id == id);
             if (cust) {
                 document.getElementById('clientName').value = cust.name;
                 document.getElementById('clientAddress').value = cust.address;
@@ -751,16 +789,17 @@
             }
         }
 
-        function updateExtCustomerName() {}
-
-        function loadCustomerTable() {
+        async function loadCustomerTable() {
             const tbody = document.getElementById('customerTableBody');
-            const customers = getCustomers();
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Memuat data dari database...</td></tr>`;
+            const customers = await getCustomers();
             tbody.innerHTML = "";
+            
             if (customers.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Belum ada data pelanggan.</td></tr>`;
                 return;
             }
+            
             customers.forEach((c, index) => {
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
@@ -768,35 +807,39 @@
                         <td class="p-3 font-semibold">${c.name}</td>
                         <td class="p-3">${c.address}</td>
                         <td class="p-3 text-center">
-                            <button onclick="deleteCustomer(${index})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteCustomer(${c.id})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function addCustomer() {
+        async function addCustomer() {
             const name = document.getElementById('newCustName').value.trim();
             const address = document.getElementById('newCustAddress').value.trim();
             if (!name || !address) return;
 
-            let customers = getCustomers();
-            customers.push({ name, address });
-            localStorage.setItem('jsc_customers', JSON.stringify(customers));
+            const { error } = await _supabase.from('jsc_customers').insert([{ name, address }]);
+            if (error) {
+                alert("Gagal menambahkan pelanggan: " + error.message);
+                return;
+            }
 
             document.getElementById('newCustName').value = '';
             document.getElementById('newCustAddress').value = '';
-            loadCustomerTable();
-            loadCustomerDropdown();
-            alert("Pelanggan berhasil ditambahkan!");
+            await loadCustomerTable();
+            await loadCustomerDropdown();
+            alert("Pelanggan berhasil disimpan ke database!");
         }
 
-        function deleteCustomer(index) {
-            let customers = getCustomers();
-            customers.splice(index, 1);
-            localStorage.setItem('jsc_customers', JSON.stringify(customers));
-            loadCustomerTable();
-            loadCustomerDropdown();
+        async function deleteCustomer(id) {
+            if (confirm("Hapus data pelanggan ini?")) {
+                const { error } = await _supabase.from('jsc_customers').delete().eq('id', id);
+                if (!error) {
+                    await loadCustomerTable();
+                    await loadCustomerDropdown();
+                }
+            }
         }
 
         function generateAutoNumber() {
@@ -814,9 +857,9 @@
             return `${prefix}/${year}/${month}/${paddedSeq}`;
         }
 
-        function initFormNumber() {
+        async function initFormNumber() {
             document.getElementById('docNumber').value = generateAutoNumber();
-            loadCustomerDropdown();
+            await loadCustomerDropdown();
             generatePreview();
         }
 
@@ -827,7 +870,7 @@
             }
         }
 
-        function switchTab(tabName) {
+        async function switchTab(tabName) {
             const genTab = document.getElementById('tab-generator');
             const extTab = document.getElementById('tab-external');
             const custTab = document.getElementById('tab-customers');
@@ -846,23 +889,23 @@
             if (tabName === 'generator') {
                 genTab.classList.remove('hidden');
                 btnGen.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                initFormNumber();
+                await initFormNumber();
             } else if (tabName === 'external') {
                 extTab.classList.remove('hidden');
                 btnExt.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                loadCustomerDropdown();
-                initExternalDoc();
+                await loadCustomerDropdown();
+                await initExternalDoc();
             } else if (tabName === 'customers') {
                 custTab.classList.remove('hidden');
                 btnCust.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                loadCustomerTable();
+                await loadCustomerTable();
             } else if (tabName === 'settings') {
                 setTab.classList.remove('hidden');
                 btnSet.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
             } else if (tabName === 'history') {
                 histTab.classList.remove('hidden');
                 btnHist.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                loadHistory();
+                await loadHistory();
             }
         }
 
@@ -957,7 +1000,7 @@
             return grandTotal;
         }
 
-        function generatePreview() {
+        async function generatePreview() {
             const docType = document.getElementById('docType').value;
             const serviceCat = document.getElementById('serviceCategory').value;
             const docNumber = document.getElementById('docNumber').value;
@@ -1033,12 +1076,12 @@
                 document.getElementById('previewTerbilang').innerText = `"${terbilang(total).trim()} Rupiah"`;
             }
 
-            const config = getSettings();
+            const config = await getSettings();
             generateQRCode(`VALID|${config.companyName}|${docNumber}|${clientName}|${formatRupiah(total)}|Dir:${config.directorName}`, "qrcode", "120");
         }
 
         async function saveAndPrint() {
-            generatePreview();
+            await generatePreview();
             const docType = document.getElementById('docType').value;
             const docNumber = document.getElementById('docNumber').value;
             const docDate = document.getElementById('docDate').value;
@@ -1061,22 +1104,17 @@
             };
 
             try {
-                const { error } = await _supabase.from('jsc_history').insert([newRecord]);
-                if (error) console.error("Gagal simpan ke Supabase:", error.message);
+                await _supabase.from('jsc_history').insert([newRecord]);
             } catch (err) {
-                console.error("Error koneksi Supabase:", err);
+                console.error("Gagal simpan ke Supabase:", err);
             }
-
-            let history = JSON.parse(localStorage.getItem('jsc_local_history')) || [];
-            history.unshift({ id: Date.now(), ...newRecord });
-            localStorage.setItem('jsc_local_history', JSON.stringify(history));
 
             window.print();
             initFormNumber();
         }
 
-        function downloadPDFInternal() {
-            generatePreview();
+        async function downloadPDFInternal() {
+            await generatePreview();
             const docType = document.getElementById('docType').value;
             const serviceCat = document.getElementById('serviceCategory').value;
             const catName = serviceCat === 'TIKET' ? 'Pesawat' : 'Hotel';
@@ -1096,10 +1134,10 @@
             html2pdf().from(element).set(options).save();
         }
 
-        function initExternalDoc() {
+        async function initExternalDoc() {
             const autoNum = generateAutoNumber();
             updateExtDate();
-            const config = getSettings();
+            const config = await getSettings();
             generateQRCode(`VALID-EXT|${config.companyName}|${autoNum}|Direktur:${config.directorName}`, "extQrcode", "80");
         }
 
@@ -1160,15 +1198,15 @@
                 return null;
             }
 
-            const customers = getCustomers();
-            const selectedCust = customers[customerIndex];
+            const customers = await getCustomers();
+            const selectedCust = customers.find(c => c.id == customerIndex);
             const autoNumber = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "");
 
             const newRecord = {
                 type: 'INVOICE LUAR',
                 number: autoNumber,
                 date: extDateVal,
-                client: selectedCust.name,
+                client: selectedCust ? selectedCust.name : 'Pelanggan',
                 total: extTotal
             };
 
@@ -1178,10 +1216,7 @@
                 console.error("Gagal simpan ke Supabase:", err);
             }
 
-            let history = JSON.parse(localStorage.getItem('jsc_local_history')) || [];
-            history.unshift({ id: Date.now(), ...newRecord });
-            localStorage.setItem('jsc_local_history', JSON.stringify(history));
-            return selectedCust.name;
+            return selectedCust ? selectedCust.name : 'Pelanggan';
         }
 
         async function printSinglePageExternal() {
@@ -1216,11 +1251,9 @@
                 const { data, error } = await _supabase.from('jsc_history').select('*').order('id', { ascending: false });
                 if (!error && data) {
                     history = data;
-                } else {
-                    history = JSON.parse(localStorage.getItem('jsc_local_history')) || [];
                 }
             } catch (err) {
-                history = JSON.parse(localStorage.getItem('jsc_local_history')) || [];
+                history = [];
             }
             
             historyTableBody.innerHTML = "";
@@ -1229,7 +1262,7 @@
                 return;
             }
 
-            history.forEach((item, index) => {
+            history.forEach((item) => {
                 historyTableBody.innerHTML += `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3">${item.date || '-'}</td>
@@ -1238,7 +1271,7 @@
                         <td class="p-3">${item.client}</td>
                         <td class="p-3 text-right font-bold text-slate-900">${formatRupiah(item.total)}</td>
                         <td class="p-3 text-center">
-                            <button onclick="deleteHistoryItem('${item.id || index}')" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteHistoryItem('${item.id}')" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -1249,12 +1282,8 @@
             if (confirm("Hapus histori ini?")) {
                 try {
                     await _supabase.from('jsc_history').delete().eq('id', id);
+                    loadHistory();
                 } catch(e) {}
-
-                let history = JSON.parse(localStorage.getItem('jsc_local_history')) || [];
-                history = history.filter(item => item.id != id);
-                localStorage.setItem('jsc_local_history', JSON.stringify(history));
-                loadHistory();
             }
         }
 
@@ -1262,13 +1291,12 @@
             if (confirm("Apakah Anda yakin ingin menghapus semua histori dokumen?")) {
                 try {
                     await _supabase.from('jsc_history').delete().neq('id', 0);
+                    loadHistory();
                 } catch(e) {}
-                localStorage.removeItem('jsc_local_history');
-                loadHistory();
             }
         }
 
-        // Jalankan Pengecekan Setelah Struktur Halaman 100% Selesai Dimuat Browser
+        // Inisialisasi Saat Halaman Dimuat
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('docDate').valueAsDate = new Date();
@@ -1277,11 +1305,6 @@
             document.getElementById('extDocDate').valueAsDate = new Date();
             checkUserSession();
         });
-    </script>
-</body>
-</html>
-i di awal
-        checkUserSession();
     </script>
 </body>
 </html>
