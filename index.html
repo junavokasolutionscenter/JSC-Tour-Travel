@@ -22,7 +22,6 @@
             }
             .no-print { display: none !important; }
         }
-        /* Perbaikan Presisi Lebar Kontainer Dokumen agar Standar A4 dan Tidak Ada Sisa Kosong di Kanan */
         .invoice-container {
             width: 100%;
             max-width: 210mm;
@@ -63,7 +62,9 @@
         <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
                 <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-lg shadow">JSC</div>
+                    <div id="navLogoContainer">
+                        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-lg shadow">JSC</div>
+                    </div>
                     <div>
                         <h1 class="text-sm font-bold tracking-tight">JSC TOUR & TRAVEL</h1>
                         <p class="text-[10px] text-slate-400">Cloud System Connected</p>
@@ -150,10 +151,15 @@
                         <div id="print-area" class="invoice-container bg-white p-8 rounded-xl shadow-lg text-xs text-slate-800 space-y-6">
                             <!-- Header Surat -->
                             <div class="flex justify-between items-start border-b pb-4">
-                                <div>
-                                    <h2 id="prevBrand" class="text-base font-black text-blue-900 tracking-wide">JSC TOUR & TRAVEL</h2>
-                                    <p id="prevLegal" class="text-[10px] text-slate-500 font-semibold">PT. JUNAVOKA SOLUTIONS CENTER</p>
-                                    <p id="prevCompanyAddress" class="text-[10px] text-slate-500 mt-1 max-w-[220px]">Jl. Desa Air Gading No. 001, RT 001 RW 001, Desa Air Gading, Kec. Muara Padang, Kab. Banyuasin, 30975</p>
+                                <div class="flex items-start space-x-3">
+                                    <div id="previewLogoBox" class="w-12 h-12 flex items-center justify-center shrink-0">
+                                        <div class="w-10 h-10 bg-blue-900 text-white rounded-lg flex items-center justify-center font-bold text-sm">JSC</div>
+                                    </div>
+                                    <div>
+                                        <h2 id="prevBrand" class="text-base font-black text-blue-900 tracking-wide">JSC TOUR & TRAVEL</h2>
+                                        <p id="prevLegal" class="text-[10px] text-slate-500 font-semibold">PT. JUNAVOKA SOLUTIONS CENTER</p>
+                                        <p id="prevCompanyAddress" class="text-[10px] text-slate-500 mt-1 max-w-[220px]">Jl. Desa Air Gading No. 001, RT 001 RW 001, Desa Air Gading, Kec. Muara Padang, Kab. Banyuasin, 30975</p>
+                                    </div>
                                 </div>
                                 <div class="text-right">
                                     <h1 id="prevDocTitle" class="text-xl font-black text-slate-900 uppercase tracking-widest">INVOICE</h1>
@@ -257,10 +263,10 @@
                 </div>
             </div>
 
-            <!-- TAB 4: PENGATURAN -->
+            <!-- TAB 4: PENGATURAN (LENGKAP DENGAN UPLOAD LOGO) -->
             <div id="tab-settings" class="hidden space-y-6 max-w-2xl mx-auto">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                    <h2 class="text-base font-bold text-slate-900 border-b pb-2"><i class="fa-solid fa-gear text-blue-600 mr-2"></i>Pengaturan Perusahaan & Direktur</h2>
+                    <h2 class="text-base font-bold text-slate-900 border-b pb-2"><i class="fa-solid fa-gear text-blue-600 mr-2"></i>Pengaturan Perusahaan & Logo</h2>
                     <form onsubmit="saveSettings(event)" class="space-y-4 text-xs">
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Nama Brand / Usaha</label>
@@ -277,6 +283,13 @@
                         <div>
                             <label class="block font-bold text-slate-600 mb-1">Nama Direktur</label>
                             <input type="text" id="setDirector" class="w-full px-3 py-2 border rounded-xl" value="Tri Aniza Oktarina">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Upload Logo Perusahaan (Opsional)</label>
+                            <input type="file" id="setLogoFile" accept="image/*" onchange="handleLogoUpload(event)" class="w-full px-3 py-2 border rounded-xl">
+                            <div id="logoPreviewContainer" class="mt-2 flex items-center gap-3">
+                                <span class="text-slate-400">Belum ada logo diupload</span>
+                            </div>
                         </div>
                         <button type="submit" class="w-full py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow">Simpan Pengaturan</button>
                     </form>
@@ -339,6 +352,8 @@
         const SUPABASE_URL = "https://fhembzfaqprkjxmbzwuu.supabase.co";
         const SUPABASE_KEY = "sb_publishable_BQUtRnufelM9jUKi0bu69A_-y4J_ZHE";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentLogoData = "";
 
         let autoLogoutTimer;
         function resetAutoLogout() {
@@ -415,6 +430,36 @@
                 document.getElementById('setLegal').value = data.company_legal || '';
                 document.getElementById('setAddress').value = data.company_address || '';
                 document.getElementById('setDirector').value = data.director_name || '';
+
+                if (data.logo_data) {
+                    currentLogoData = data.logo_data;
+                    renderLogoInPreview(currentLogoData);
+                }
+            }
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentLogoData = e.target.result;
+                    renderLogoInPreview(currentLogoData);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderLogoInPreview(base64Str) {
+            const container = document.getElementById('previewLogoBox');
+            const navContainer = document.getElementById('navLogoContainer');
+            if (base64Str) {
+                container.innerHTML = `<img src="${base64Str}" class="max-h-12 max-w-[50px] object-contain">`;
+                navContainer.innerHTML = `<img src="${base64Str}" class="w-9 h-9 object-cover rounded-xl shadow">`;
+                document.getElementById('logoPreviewContainer').innerHTML = `<img src="${base64Str}" class="h-10 object-contain rounded border p-1"><span class="text-xs text-green-600 font-bold">Logo siap disimpan</span>`;
+            } else {
+                container.innerHTML = `<div class="w-10 h-10 bg-blue-900 text-white rounded-lg flex items-center justify-center font-bold text-sm">JSC</div>`;
+                navContainer.innerHTML = `<div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-lg shadow">JSC</div>`;
             }
         }
 
@@ -425,11 +470,12 @@
                 company_name: document.getElementById('setBrand').value,
                 company_legal: document.getElementById('setLegal').value,
                 company_address: document.getElementById('setAddress').value,
-                director_name: document.getElementById('setDirector').value
+                director_name: document.getElementById('setDirector').value,
+                logo_data: currentLogoData
             };
             const { error } = await _supabase.from('jsc_settings').upsert(payload);
             if (error) alert("Gagal menyimpan: " + error.message);
-            else { alert("Pengaturan berhasil disimpan!"); loadSettings(); generatePreview(); }
+            else { alert("Pengaturan & Logo berhasil disimpan!"); loadSettings(); generatePreview(); }
         }
 
         function toggleDocType() {
@@ -510,7 +556,6 @@
             return temp.trim();
         }
 
-        // --- FITUR REVISI: OTOMATIS SIMPAN KE HISTORI UNTUK SEMUA TOMBOL ---
         async function saveToHistoryDatabase() {
             const record = {
                 type: document.getElementById('docType').value,
@@ -675,777 +720,6 @@
         }
 
         window.onload = checkSession;
-    </script>
-</body>
-</html>
-ion;
-    </script>
-</body>
-</html>
-nded-r-lg">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- Script Utama -->
-    <script>
-        const SUPABASE_URL = 'https://fhembzfaqprkjxmbzwuu.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_BQUtRnufelM9jUKi0bu69A_-y4J_ZHE';
-        
-        const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // AUTO-LOGOUT INACTIVITY TIMER (30 Menit)
-        let inactivityTimeout;
-        const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 Menit
-
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimeout);
-            inactivityTimeout = setTimeout(async () => {
-                await _supabase.auth.signOut();
-                alert("Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit. Silakan login kembali.");
-                showLoginScreen();
-            }, INACTIVITY_LIMIT);
-        }
-
-        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
-            window.addEventListener(event, resetInactivityTimer, true);
-        });
-
-        // LOGIC AUTHENTICATION
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorElement = document.getElementById('loginError');
-            const btnSubmit = document.getElementById('btnLoginSubmit');
-
-            errorElement.classList.add('hidden');
-            btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
-
-            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                errorElement.innerText = error.message === 'Invalid login credentials' ? 'Email atau password salah!' : error.message;
-                errorElement.classList.remove('hidden');
-                btnSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi';
-            } else {
-                showAppScreen();
-            }
-        }
-
-        async function handleLogout() {
-            if (confirm("Apakah Anda yakin ingin logout?")) {
-                await _supabase.auth.signOut();
-                showLoginScreen();
-            }
-        }
-
-        async function checkUserSession() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                showAppScreen();
-            } else {
-                showLoginScreen();
-            }
-        }
-
-        function showLoginScreen() {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('app-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('flex');
-            document.getElementById('btnLoginSubmit').innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi';
-        }
-
-        async function showAppScreen() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('hidden');
-            document.getElementById('app-screen').classList.add('flex');
-            await applySettingsToUI();
-            initFormNumber();
-            resetInactivityTimer();
-        }
-
-        // PENGATURAN PERUSAHAAN SUPABASE
-        const defaultConfig = {
-            companyName: "JSC TOUR & TRAVEL",
-            companyLegal: "PT JUNAVOKA SOLUTIONS CENTER",
-            companyAddress: "Jl. Desa Air Gading No. 001, RT 001 RW 001, Desa Air Gading, Kec. Muara Padang, Kab. Banyuasin, 30975",
-            directorName: "Tri Aima Oktarina",
-            logoData: ""
-        };
-
-        async function getSettings() {
-            try {
-                const { data, error } = await _supabase.from('jsc_settings').select('*').eq('id', 1).single();
-                if (error || !data) return defaultConfig;
-                return {
-                    companyName: data.company_name || defaultConfig.companyName,
-                    companyLegal: data.company_legal || defaultConfig.companyLegal,
-                    companyAddress: data.company_address || defaultConfig.companyAddress,
-                    directorName: data.director_name || defaultConfig.directorName,
-                    logoData: data.logo_data || defaultConfig.logoData
-                };
-            } catch (err) {
-                return defaultConfig;
-            }
-        }
-
-        async function applySettingsToUI() {
-            const config = await getSettings();
-            document.getElementById('navCompanyName').innerText = config.companyName;
-            document.getElementById('navCompanySub').innerText = config.companyLegal;
-            document.getElementById('previewCompanyName').innerText = config.companyName;
-            document.getElementById('previewCompanyLegal').innerText = config.companyLegal;
-            document.getElementById('previewCompanyAddress').innerText = config.companyAddress;
-            document.getElementById('footerCompanyName').innerText = `${config.companyName} — ${config.companyLegal}`;
-            document.getElementById('previewDirectorName').innerText = config.directorName;
-            document.getElementById('previewDirectorLegal').innerText = config.companyLegal;
-
-            document.getElementById('extPrevCompanyName').innerText = config.companyName;
-            document.getElementById('extPrevCompanyLegal').innerText = config.companyLegal;
-            document.getElementById('extPrevCompanyAddress').innerText = config.companyAddress;
-            document.getElementById('extFooterCompanyName').innerText = `${config.companyName} — ${config.companyLegal}`;
-            document.getElementById('extPrevDirectorName').innerText = config.directorName;
-            document.getElementById('extPrevDirectorLegal').innerText = config.companyLegal;
-
-            document.getElementById('settingCompanyName').value = config.companyName;
-            document.getElementById('settingCompanyLegal').value = config.companyLegal;
-            document.getElementById('settingCompanyAddress').value = config.companyAddress;
-            document.getElementById('settingDirectorName').value = config.directorName;
-
-            const logoSrc = config.logoData;
-            ['navLogoImg', 'previewLogoImg', 'extPrevLogoImg'].forEach(id => {
-                const img = document.getElementById(id);
-                if (img) {
-                    if (logoSrc) {
-                        img.src = logoSrc;
-                        img.classList.remove('hidden');
-                    } else {
-                        img.classList.add('hidden');
-                    }
-                }
-            });
-            ['navLogoText', 'previewLogoText', 'extPrevLogoText'].forEach(id => {
-                const txt = document.getElementById(id);
-                if (txt) {
-                    if (logoSrc) txt.classList.add('hidden');
-                    else txt.classList.remove('hidden');
-                }
-            });
-        }
-
-        async function saveSettings() {
-            const fileInput = document.getElementById('settingLogoFile');
-            const currentConfig = await getSettings();
-            
-            const configData = {
-                id: 1,
-                company_name: document.getElementById('settingCompanyName').value,
-                company_legal: document.getElementById('settingCompanyLegal').value,
-                company_address: document.getElementById('settingCompanyAddress').value,
-                director_name: document.getElementById('settingDirectorName').value,
-                logo_data: currentConfig.logoData
-            };
-
-            const saveToSupabase = async (payload) => {
-                const { error } = await _supabase.from('jsc_settings').upsert(payload);
-                if (error) {
-                    alert("Gagal menyimpan ke database: " + error.message);
-                } else {
-                    alert("Pengaturan berhasil disimpan ke database Supabase!");
-                    await applySettingsToUI();
-                    switchTab('generator');
-                }
-            };
-
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    configData.logo_data = e.target.result;
-                    await saveToSupabase(configData);
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                await saveToSupabase(configData);
-            }
-        }
-
-        async function resetSettings() {
-            if (confirm("Kembalikan pengaturan ke awal?")) {
-                const { error } = await _supabase.from('jsc_settings').upsert({
-                    id: 1,
-                    company_name: defaultConfig.companyName,
-                    company_legal: defaultConfig.companyLegal,
-                    company_address: defaultConfig.companyAddress,
-                    director_name: defaultConfig.directorName,
-                    logo_data: defaultConfig.logoData
-                });
-                if (!error) {
-                    await applySettingsToUI();
-                    alert("Pengaturan telah direset ke default.");
-                }
-            }
-        }
-
-        // PELANGGAN SUPABASE
-        async function getCustomers() {
-            try {
-                const { data, error } = await _supabase.from('jsc_customers').select('*').order('id', { ascending: false });
-                if (error) throw error;
-                return data || [];
-            } catch (err) {
-                return [];
-            }
-        }
-
-        async function loadCustomerDropdown() {
-            const selects = [document.getElementById('selectCustomer'), document.getElementById('extSelectCustomer')];
-            const customers = await getCustomers();
-            selects.forEach(sel => {
-                if (sel) {
-                    sel.innerHTML = '<option value="">-- Pilih dari Daftar Pelanggan --</option>';
-                    customers.forEach((c) => {
-                        sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-                    });
-                }
-            });
-        }
-
-        async function onSelectCustomer(id) {
-            if (id === "") return;
-            const customers = await getCustomers();
-            const cust = customers.find(c => c.id == id);
-            if (cust) {
-                document.getElementById('clientName').value = cust.name;
-                document.getElementById('clientAddress').value = cust.address;
-                document.getElementById('receivedFrom').value = cust.name;
-                generatePreview();
-            }
-        }
-
-        async function loadCustomerTable() {
-            const tbody = document.getElementById('customerTableBody');
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Memuat data dari database...</td></tr>`;
-            const customers = await getCustomers();
-            tbody.innerHTML = "";
-            
-            if (customers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Belum ada data pelanggan.</td></tr>`;
-                return;
-            }
-            
-            customers.forEach((c, index) => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3">${index + 1}</td>
-                        <td class="p-3 font-semibold">${c.name}</td>
-                        <td class="p-3">${c.address}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="deleteCustomer(${c.id})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function addCustomer() {
-            const name = document.getElementById('newCustName').value.trim();
-            const address = document.getElementById('newCustAddress').value.trim();
-            if (!name || !address) return;
-
-            const { error } = await _supabase.from('jsc_customers').insert([{ name, address }]);
-            if (error) {
-                alert("Gagal menambahkan pelanggan: " + error.message);
-                return;
-            }
-
-            document.getElementById('newCustName').value = '';
-            document.getElementById('newCustAddress').value = '';
-            await loadCustomerTable();
-            await loadCustomerDropdown();
-            alert("Pelanggan berhasil disimpan ke database!");
-        }
-
-        async function deleteCustomer(id) {
-            if (confirm("Hapus data pelanggan ini?")) {
-                const { error } = await _supabase.from('jsc_customers').delete().eq('id', id);
-                if (!error) {
-                    await loadCustomerTable();
-                    await loadCustomerDropdown();
-                }
-            }
-        }
-
-        function generateAutoNumber() {
-            const type = document.getElementById('docType').value;
-            const prefix = (type === 'INVOICE') ? 'INV/JSC' : 'KWT/JSC';
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-
-            let counterKey = `jsc_counter_${type}_${year}_${month}`;
-            let lastSeq = parseInt(localStorage.getItem(counterKey)) || 0;
-            let nextSeq = lastSeq + 1;
-            let paddedSeq = String(nextSeq).padStart(3, '0');
-
-            return `${prefix}/${year}/${month}/${paddedSeq}`;
-        }
-
-        async function initFormNumber() {
-            document.getElementById('docNumber').value = generateAutoNumber();
-            await loadCustomerDropdown();
-            generatePreview();
-        }
-
-        function generateQRCode(textData, targetId = "qrcode", size = "120") {
-            const container = document.getElementById(targetId);
-            if(container) {
-                container.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(textData)}" alt="QR Code" class="mx-auto object-contain" style="width: ${targetId === 'extQrcode' ? '35px' : '55px'}; height: ${targetId === 'extQrcode' ? '35px' : '55px'};">`;
-            }
-        }
-
-        async function switchTab(tabName) {
-            const genTab = document.getElementById('tab-generator');
-            const extTab = document.getElementById('tab-external');
-            const custTab = document.getElementById('tab-customers');
-            const setTab = document.getElementById('tab-settings');
-            const histTab = document.getElementById('tab-history');
-            
-            const btnGen = document.getElementById('nav-generator');
-            const btnExt = document.getElementById('nav-external');
-            const btnCust = document.getElementById('nav-customers');
-            const btnSet = document.getElementById('nav-settings');
-            const btnHist = document.getElementById('nav-history');
-
-            [genTab, extTab, custTab, setTab, histTab].forEach(t => t.classList.add('hidden'));
-            [btnGen, btnExt, btnCust, btnSet, btnHist].forEach(b => b.className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-1.5");
-
-            if (tabName === 'generator') {
-                genTab.classList.remove('hidden');
-                btnGen.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                await initFormNumber();
-            } else if (tabName === 'external') {
-                extTab.classList.remove('hidden');
-                btnExt.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                await loadCustomerDropdown();
-                await initExternalDoc();
-            } else if (tabName === 'customers') {
-                custTab.classList.remove('hidden');
-                btnCust.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                await loadCustomerTable();
-            } else if (tabName === 'settings') {
-                setTab.classList.remove('hidden');
-                btnSet.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-            } else if (tabName === 'history') {
-                histTab.classList.remove('hidden');
-                btnHist.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
-                await loadHistory();
-            }
-        }
-
-        function updateDocType() {
-            const type = document.getElementById('docType').value;
-            const kwitansiField = document.getElementById('kwitansiField');
-            const invoiceFields = document.getElementById('invoiceFields');
-            const previewInvoiceSec = document.getElementById('previewInvoiceSection');
-            const previewKwitansiSec = document.getElementById('previewKwitansiSection');
-            const previewTotalSec = document.getElementById('previewTotalSection');
-
-            if (type === 'KWITANSI') {
-                kwitansiField.classList.remove('hidden');
-                invoiceFields.classList.add('hidden');
-                previewInvoiceSec.classList.add('hidden');
-                previewKwitansiSec.classList.remove('hidden');
-                previewTotalSec.classList.add('hidden');
-            } else {
-                kwitansiField.classList.add('hidden');
-                invoiceFields.classList.remove('hidden');
-                previewInvoiceSec.classList.remove('hidden');
-                previewKwitansiSec.classList.add('hidden');
-                previewTotalSec.classList.remove('hidden');
-            }
-            initFormNumber();
-        }
-
-        function updateServiceCategory() {
-            const cat = document.getElementById('serviceCategory').value;
-            const flightFields = document.getElementById('flightFields');
-            const hotelFields = document.getElementById('hotelFields');
-
-            if (cat === 'TIKET') {
-                flightFields.classList.remove('hidden');
-                hotelFields.classList.add('hidden');
-            } else {
-                flightFields.classList.add('hidden');
-                hotelFields.classList.remove('hidden');
-            }
-            generatePreview();
-        }
-
-        function addItem() {
-            const container = document.getElementById('itemsContainer');
-            const row = document.createElement('div');
-            row.className = "item-row grid grid-cols-12 gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200";
-            row.innerHTML = `
-                <input type="text" placeholder="Deskripsi Layanan" class="col-span-6 rounded border border-slate-300 px-2 py-1 text-xs desc-input">
-                <input type="number" placeholder="Qty" value="1" min="1" oninput="calculateTotal()" class="col-span-2 rounded border border-slate-300 px-2 py-1 text-xs qty-input">
-                <input type="number" placeholder="Harga" value="0" min="0" oninput="calculateTotal()" class="col-span-3 rounded border border-slate-300 px-2 py-1 text-xs price-input">
-                <button type="button" onclick="removeItem(this)" class="col-span-1 text-red-500 hover:text-red-700 text-center"><i class="fa-solid fa-trash"></i></button>
-            `;
-            container.appendChild(row);
-        }
-
-        function removeItem(btn) {
-            const rows = document.querySelectorAll('.item-row');
-            if (rows.length > 1) {
-                btn.closest('.item-row').remove();
-                calculateTotal();
-            } else {
-                alert("Minimal harus ada 1 item.");
-            }
-        }
-
-        function formatRupiah(angka) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-        }
-
-        function terbilang(nilai) {
-            nilai = Math.floor(Math.abs(nilai));
-            const huruf = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
-            let temp = "";
-            if (nilai < 12) temp = " " + huruf[nilai];
-            else if (nilai < 20) temp = terbilang(nilai - 10) + " Belas";
-            else if (nilai < 100) temp = terbilang(Math.floor(nilai / 10)) + " Puluh" + terbilang(nilai % 10);
-            else if (nilai < 200) temp = " Seratus" + terbilang(nilai - 100);
-            else if (nilai < 1000) temp = terbilang(Math.floor(nilai / 100)) + " Ratus" + terbilang(nilai % 100);
-            else if (nilai < 2000) temp = " Seribu" + terbilang(nilai - 1000);
-            else if (nilai < 1000000) temp = terbilang(Math.floor(nilai / 1000)) + " Ribu" + terbilang(nilai % 1000);
-            else if (nilai < 1000000000) temp = terbilang(Math.floor(nilai / 1000000)) + " Juta" + terbilang(nilai % 1000000);
-            return temp;
-        }
-
-        function calculateTotal() {
-            let grandTotal = 0;
-            document.querySelectorAll('.item-row').forEach(row => {
-                const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
-                const price = parseFloat(row.querySelector('.price-input').value) || 0;
-                grandTotal += qty * price;
-            });
-            return grandTotal;
-        }
-
-        async function generatePreview() {
-            const docType = document.getElementById('docType').value;
-            const serviceCat = document.getElementById('serviceCategory').value;
-            const docNumber = document.getElementById('docNumber').value;
-            const docDate = document.getElementById('docDate').value;
-            const clientName = document.getElementById('clientName').value || '-';
-            const clientAddress = document.getElementById('clientAddress').value || '-';
-            const docNotes = document.getElementById('docNotes').value;
-
-            const formattedDate = docDate ? new Date(docDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
-
-            document.getElementById('previewDocTitle').innerText = docType;
-            document.getElementById('previewDocNumber').innerText = "No: " + docNumber;
-            document.getElementById('previewDocDate').innerText = "Tanggal: " + formattedDate;
-            document.getElementById('previewClientName').innerText = clientName;
-            document.getElementById('previewClientAddress').innerText = clientAddress;
-            document.getElementById('previewNotes').innerText = docNotes;
-
-            const serviceBox = document.getElementById('previewServiceDetailBox');
-            if (serviceCat === 'TIKET') {
-                const bCode = document.getElementById('flightBookingCode').value || '-';
-                const fTime = document.getElementById('flightTime').value || '-';
-                const fDate = document.getElementById('flightDate').value ? new Date(document.getElementById('flightDate').value).toLocaleDateString('id-ID') : '-';
-                serviceBox.innerHTML = `
-                    <span class="font-bold text-slate-400 uppercase tracking-wider block mb-1">Detail Penerbangan:</span>
-                    <p class="text-slate-700"><strong>Booking Code:</strong> <span class="text-blue-600 font-bold">${bCode}</span></p>
-                    <p class="text-slate-700"><strong>Tanggal:</strong> ${fDate}</p>
-                    <p class="text-slate-700"><strong>Jam:</strong> ${fTime} WIB</p>
-                `;
-            } else {
-                const itId = document.getElementById('hotelItineraryId').value || '-';
-                const cIn = document.getElementById('hotelCheckIn').value ? new Date(document.getElementById('hotelCheckIn').value).toLocaleDateString('id-ID') : '-';
-                const cOut = document.getElementById('hotelCheckOut').value ? new Date(document.getElementById('hotelCheckOut').value).toLocaleDateString('id-ID') : '-';
-                serviceBox.innerHTML = `
-                    <span class="font-bold text-slate-400 uppercase tracking-wider block mb-1">Detail Hotel:</span>
-                    <p class="text-slate-700"><strong>Itinerary ID:</strong> <span class="text-blue-600 font-bold">${itId}</span></p>
-                    <p class="text-slate-700"><strong>Check-In:</strong> ${cIn}</p>
-                    <p class="text-slate-700"><strong>Check-Out:</strong> ${cOut}</p>
-                `;
-            }
-
-            let total = 0;
-            if (docType === 'INVOICE') {
-                const itemsList = document.getElementById('previewItemsList');
-                itemsList.innerHTML = "";
-                document.querySelectorAll('.item-row').forEach(row => {
-                    const desc = row.querySelector('.desc-input').value || '-';
-                    const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
-                    const price = parseFloat(row.querySelector('.price-input').value) || 0;
-                    const subtotal = qty * price;
-                    total += subtotal;
-
-                    itemsList.innerHTML += `
-                        <tr>
-                            <td class="py-2.5 font-medium">${desc}</td>
-                            <td class="py-2.5 text-center">${qty}</td>
-                            <td class="py-2.5 text-right">${formatRupiah(price)}</td>
-                            <td class="py-2.5 text-right font-bold">${formatRupiah(subtotal)}</td>
-                        </tr>
-                    `;
-                });
-                document.getElementById('previewGrandTotal').innerText = formatRupiah(total);
-            } else {
-                const receivedFrom = document.getElementById('receivedFrom').value || clientName;
-                const forPayment = document.getElementById('forPayment').value;
-                document.getElementById('previewReceivedFrom').innerText = receivedFrom;
-                document.getElementById('previewForPayment').innerText = forPayment;
-                document.getElementById('previewKwitansiInfoBox').classList.remove('hidden');
-
-                const firstPrice = document.querySelector('.price-input');
-                total = firstPrice ? (parseFloat(firstPrice.value) || 1500000) : 1500000;
-
-                document.getElementById('previewKwitansiNominal').innerText = formatRupiah(total);
-                document.getElementById('previewTerbilang').innerText = `"${terbilang(total).trim()} Rupiah"`;
-            }
-
-            const config = await getSettings();
-            generateQRCode(`VALID|${config.companyName}|${docNumber}|${clientName}|${formatRupiah(total)}|Dir:${config.directorName}`, "qrcode", "120");
-        }
-
-        async function saveAndPrint() {
-            await generatePreview();
-            const docType = document.getElementById('docType').value;
-            const docNumber = document.getElementById('docNumber').value;
-            const docDate = document.getElementById('docDate').value;
-            const clientName = document.getElementById('clientName').value || 'Pelanggan Umum';
-            const total = docType === 'INVOICE' ? calculateTotal() : (parseFloat(document.querySelector('.price-input')?.value) || 1500000);
-
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            let counterKey = `jsc_counter_${docType}_${year}_${month}`;
-            let lastSeq = parseInt(localStorage.getItem(counterKey)) || 0;
-            localStorage.setItem(counterKey, lastSeq + 1);
-
-            const newRecord = {
-                type: docType,
-                number: docNumber,
-                date: docDate,
-                client: clientName,
-                total: total
-            };
-
-            try {
-                await _supabase.from('jsc_history').insert([newRecord]);
-            } catch (err) {
-                console.error("Gagal simpan ke Supabase:", err);
-            }
-
-            window.print();
-            initFormNumber();
-        }
-
-        async function downloadPDFInternal() {
-            await generatePreview();
-            const docType = document.getElementById('docType').value;
-            const serviceCat = document.getElementById('serviceCategory').value;
-            const catName = serviceCat === 'TIKET' ? 'Pesawat' : 'Hotel';
-            const clientNameInput = document.getElementById('clientName').value.trim() || 'Pelanggan-Umum';
-            const cleanClientName = clientNameInput.replace(/[^a-zA-Z0-9]/g, '-');
-
-            const fileName = `${docType}-${catName}-${cleanClientName}.pdf`;
-            const element = document.getElementById('print-area');
-            const options = {
-                margin: 0,
-                filename: fileName,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().from(element).set(options).save();
-        }
-
-        async function initExternalDoc() {
-            const autoNum = generateAutoNumber();
-            updateExtDate();
-            const config = await getSettings();
-            generateQRCode(`VALID-EXT|${config.companyName}|${autoNum}|Direktur:${config.directorName}`, "extQrcode", "80");
-        }
-
-        function updateExtDate() {
-            const extDateVal = document.getElementById('extDocDate').value;
-            const formattedExtDate = extDateVal ? new Date(extDateVal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
-            const autoNum = generateAutoNumber();
-            document.getElementById('extPrevDocNumber').innerText = "No: " + autoNum;
-            document.getElementById('extPrevDocDate').innerText = "Tanggal: " + formattedExtDate;
-            
-            const extNotesVal = document.getElementById('extDocNotes').value;
-            document.getElementById('extPreviewNotes').innerText = extNotesVal;
-        }
-
-        function embedFileToDocument(input) {
-            const container = document.getElementById('embeddedFileContainer');
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const fileURL = URL.createObjectURL(file);
-
-                if (file.type === 'application/pdf') {
-                    container.innerHTML = `<canvas id="pdfCanvas" class="w-full h-full object-cover mx-auto"></canvas>`;
-                    if (window.pdfjsLib) {
-                        pdfjsLib.getDocument(fileURL).promise.then(function(pdfDoc) {
-                            pdfDoc.getPage(1).then(function(page) {
-                                const viewport = page.getViewport({ scale: 2.2 });
-                                const canvas = document.getElementById('pdfCanvas');
-                                if (!canvas) return;
-                                const ctx = canvas.getContext('2d');
-                                canvas.height = viewport.height;
-                                canvas.width = viewport.width;
-                                page.render({ canvasContext: ctx, viewport: viewport });
-                            });
-                        });
-                    }
-                } else if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        container.innerHTML = `<img src="${e.target.result}" alt="Invoice" class="w-full h-full object-cover" />`;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-        }
-
-        async function saveExtRecord() {
-            const fileInput = document.getElementById('extFile');
-            const customerIndex = document.getElementById('extSelectCustomer').value;
-            const extTotal = parseFloat(document.getElementById('extTotal').value) || 0;
-            const extDateVal = document.getElementById('extDocDate').value;
-
-            if (!fileInput.files || !fileInput.files[0]) {
-                alert("Harap lampirkan file invoice terlebih dahulu.");
-                return null;
-            }
-            if (customerIndex === "") {
-                alert("Harap pilih data pemesan.");
-                return null;
-            }
-
-            const customers = await getCustomers();
-            const selectedCust = customers.find(c => c.id == customerIndex);
-            const autoNumber = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "");
-
-            const newRecord = {
-                type: 'INVOICE LUAR',
-                number: autoNumber,
-                date: extDateVal,
-                client: selectedCust ? selectedCust.name : 'Pelanggan',
-                total: extTotal
-            };
-
-            try {
-                await _supabase.from('jsc_history').insert([newRecord]);
-            } catch (err) {
-                console.error("Gagal simpan ke Supabase:", err);
-            }
-
-            return selectedCust ? selectedCust.name : 'Pelanggan';
-        }
-
-        async function printSinglePageExternal() {
-            const custName = await saveExtRecord();
-            if (!custName) return;
-            setTimeout(() => { window.print(); }, 300);
-        }
-
-        async function downloadPDFSinglePageExternal() {
-            const custName = await saveExtRecord();
-            if (!custName) return;
-            const cleanCustName = custName.replace(/[^a-zA-Z0-9]/g, '-');
-            const fileName = `Invoice-Luar-${cleanCustName}.pdf`;
-
-            const element = document.getElementById('print-area-external');
-            const options = {
-                margin: 0,
-                filename: fileName,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            setTimeout(() => { html2pdf().from(element).set(options).save(); }, 300);
-        }
-
-        async function loadHistory() {
-            const historyTableBody = document.getElementById('historyTableBody');
-            historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Memuat riwayat dari database...</td></tr>`;
-
-            let history = [];
-            try {
-                const { data, error } = await _supabase.from('jsc_history').select('*').order('id', { ascending: false });
-                if (!error && data) {
-                    history = data;
-                }
-            } catch (err) {
-                history = [];
-            }
-            
-            historyTableBody.innerHTML = "";
-            if (history.length === 0) {
-                historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Belum ada riwayat dokumen tersimpan.</td></tr>`;
-                return;
-            }
-
-            history.forEach((item) => {
-                historyTableBody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3">${item.date || '-'}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.type === 'INVOICE' ? 'bg-blue-100 text-blue-700' : (item.type === 'KWITANSI' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700')}">${item.type}</span></td>
-                        <td class="p-3 font-semibold">${item.number}</td>
-                        <td class="p-3">${item.client}</td>
-                        <td class="p-3 text-right font-bold text-slate-900">${formatRupiah(item.total)}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="deleteHistoryItem('${item.id}')" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        async function deleteHistoryItem(id) {
-            if (confirm("Hapus histori ini?")) {
-                try {
-                    await _supabase.from('jsc_history').delete().eq('id', id);
-                    loadHistory();
-                } catch(e) {}
-            }
-        }
-
-        async function clearHistory() {
-            if (confirm("Apakah Anda yakin ingin menghapus semua histori dokumen?")) {
-                try {
-                    await _supabase.from('jsc_history').delete().neq('id', 0);
-                    loadHistory();
-                } catch(e) {}
-            }
-        }
-
-        // Inisialisasi Saat Halaman Dimuat
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('loginForm').addEventListener('submit', handleLogin);
-            document.getElementById('docDate').valueAsDate = new Date();
-            document.getElementById('flightDate').valueAsDate = new Date();
-            document.getElementById('hotelCheckIn').valueAsDate = new Date();
-            document.getElementById('extDocDate').valueAsDate = new Date();
-            checkUserSession();
-        });
     </script>
 </body>
 </html>
