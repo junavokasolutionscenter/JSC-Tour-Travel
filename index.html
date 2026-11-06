@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- PDF.js Library untuk Render Halaman PDF Luar -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- SheetJS Library untuk Export Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.min.js"></script>
     <script>
         if (window.pdfjsLib) {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -108,7 +110,7 @@
                         <i class="fa-solid fa-gear"></i> Pengaturan
                     </button>
                     <button onclick="switchTab('history')" id="nav-history" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Histori
+                        <i class="fa-solid fa-clock-rotate-left"></i> Histori & Rekap
                     </button>
                     <button onclick="handleLogout()" class="px-3 py-2 bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white rounded-lg text-sm font-medium transition flex items-center gap-1.5 ml-2" title="Keluar Sistem">
                         <i class="fa-solid fa-power-off"></i>
@@ -561,32 +563,96 @@
                 </form>
             </div>
 
-            <!-- TAB HISTORI -->
-            <div id="tab-history" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-900">Riwayat Dokumen Tersimpan (Database)</h2>
-                        <p class="text-xs text-slate-500">Daftar invoice dan kwitansi yang pernah dicetak secara online.</p>
+            <!-- TAB HISTORI DAN REKAP -->
+            <div id="tab-history" class="hidden space-y-6">
+                <!-- Panel Filter & Sortir Rekap -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 pb-4 border-b">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-filter text-blue-600"></i> Sortir & Rekap Data Histori
+                            </h2>
+                            <p class="text-xs text-slate-500">Filter transaksi berdasarkan bulan, nama pelanggan, alamat, atau kategori layanan.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="exportRekapExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-file-excel"></i> Export Excel
+                            </button>
+                            <button onclick="exportRekapPDF()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-file-pdf"></i> Export PDF (Rekap)
+                            </button>
+                            <button onclick="clearHistory()" class="bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5 ml-2">
+                                <i class="fa-solid fa-trash-can"></i> Hapus Semua
+                            </button>
+                        </div>
                     </div>
-                    <button onclick="clearHistory()" class="bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-2">
-                        <i class="fa-solid fa-trash-can"></i> Hapus Semua Histori
-                    </button>
-                </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700">
-                                <th class="p-3 rounded-l-lg">Tanggal</th>
-                                <th class="p-3">Jenis</th>
-                                <th class="p-3">No. Dokumen</th>
-                                <th class="p-3">Pelanggan</th>
-                                <th class="p-3 text-right">Total / Nominal</th>
-                                <th class="p-3 text-center rounded-r-lg">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
+                    <!-- Input Filter -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Sortir Bulan / Tahun</label>
+                            <input type="month" id="filterMonth" onchange="applyHistoryFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Sortir Nama Pelanggan</label>
+                            <select id="filterCustomer" onchange="applyHistoryFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="">-- Semua Pelanggan --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Sortir Alamat Pelanggan</label>
+                            <input type="text" id="filterAddress" oninput="applyHistoryFilter()" placeholder="Cari kata kunci alamat..." class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Kategori Layanan</label>
+                            <select id="filterCategory" onchange="applyHistoryFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="">-- Semua Kategori --</option>
+                                <option value="TIKET">Tiket Pesawat</option>
+                                <option value="HOTEL">Hotel</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Ringkasan Rekap Card -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-file-invoice"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Jumlah Dokumen</p>
+                                <p id="rekapCount" class="text-lg font-black text-slate-800">0 Dokumen</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 md:col-span-2">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Rekap Nominal</p>
+                                <p id="rekapTotalNominal" class="text-xl font-black text-emerald-600">Rp 0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Histori Data -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700">
+                                    <th class="p-3 rounded-l-lg">Tanggal</th>
+                                    <th class="p-3">Jenis</th>
+                                    <th class="p-3">No. Dokumen</th>
+                                    <th class="p-3">Kategori</th>
+                                    <th class="p-3">Pelanggan</th>
+                                    <th class="p-3">Alamat</th>
+                                    <th class="p-3 text-right">Total / Nominal</th>
+                                    <th class="p-3 text-center rounded-r-lg">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -765,22 +831,27 @@
         }
 
         async function loadCustomerDropdown() {
-            const selects = [document.getElementById('selectCustomer'), document.getElementById('extSelectCustomer')];
+            const selects = [
+                document.getElementById('selectCustomer'), 
+                document.getElementById('extSelectCustomer'),
+                document.getElementById('filterCustomer')
+            ];
             const customers = await getCustomers();
             selects.forEach(sel => {
                 if (sel) {
-                    sel.innerHTML = '<option value="">-- Pilih dari Daftar Pelanggan --</option>';
+                    const defaultText = sel.id === 'filterCustomer' ? '-- Semua Pelanggan --' : '-- Pilih dari Daftar Pelanggan --';
+                    sel.innerHTML = `<option value="">${defaultText}</option>`;
                     customers.forEach((c) => {
-                        sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                        sel.innerHTML += `<option value="${c.name}">${c.name}</option>`;
                     });
                 }
             });
         }
 
-        async function onSelectCustomer(id) {
-            if (id === "") return;
+        async function onSelectCustomer(name) {
+            if (name === "") return;
             const customers = await getCustomers();
-            const cust = customers.find(c => c.id == id);
+            const cust = customers.find(c => c.name === name);
             if (cust) {
                 document.getElementById('clientName').value = cust.name;
                 document.getElementById('clientAddress').value = cust.address;
@@ -945,6 +1016,7 @@
             } else if (tabName === 'history') {
                 histTab.classList.remove('hidden');
                 btnHist.className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
+                loadCustomerDropdown();
                 loadHistory();
             }
         }
@@ -1129,6 +1201,7 @@
             await generatePreview();
             const editId = document.getElementById('editRecordId').value;
             const docType = document.getElementById('docType').value;
+            const serviceCat = document.getElementById('serviceCategory').value;
             
             let docNumber = document.getElementById('docNumber').value;
             if (!editId) {
@@ -1139,6 +1212,7 @@
 
             const docDate = document.getElementById('docDate').value;
             const clientName = document.getElementById('clientName').value || 'Pelanggan Umum';
+            const clientAddress = document.getElementById('clientAddress').value || '-';
             const total = docType === 'INVOICE' ? calculateTotal() : (parseFloat(document.querySelector('.price-input')?.value) || 1500000);
 
             const recordData = {
@@ -1146,7 +1220,9 @@
                 number: docNumber,
                 date: docDate,
                 client: clientName,
-                total: total
+                address: clientAddress,
+                total: total,
+                service_category: serviceCat
             };
 
             if (editId) {
@@ -1169,6 +1245,7 @@
             const serviceCat = document.getElementById('serviceCategory').value; 
             const catName = serviceCat === 'TIKET' ? 'Pesawat' : 'Hotel';
             const clientNameInput = document.getElementById('clientName').value.trim() || 'Pelanggan-Umum';
+            const clientAddressInput = document.getElementById('clientAddress').value.trim() || '-';
             const cleanClientName = clientNameInput.replace(/[^a-zA-Z0-9]/g, '-');
             
             let docNumber = document.getElementById('docNumber').value;
@@ -1186,7 +1263,9 @@
                 number: docNumber,
                 date: docDate,
                 client: clientNameInput,
-                total: total
+                address: clientAddressInput,
+                total: total,
+                service_category: serviceCat
             };
 
             if (editId) {
@@ -1271,7 +1350,7 @@
 
         async function saveExtRecord() {
             const fileInput = document.getElementById('extFile');
-            const customerId = document.getElementById('extSelectCustomer').value;
+            const customerName = document.getElementById('extSelectCustomer').value;
             const extTotal = parseFloat(document.getElementById('extTotal').value) || 0;
             const extDateVal = document.getElementById('extDocDate').value;
             const editId = document.getElementById('extEditRecordId').value;
@@ -1281,13 +1360,13 @@
                 alert("Harap lampirkan file invoice terlebih dahulu.");
                 return null;
             }
-            if (customerId === "") {
+            if (customerName === "") {
                 alert("Harap pilih data pemesan.");
                 return null;
             }
 
             const customers = await getCustomers();
-            const selectedCust = customers.find(c => c.id == customerId);
+            const selectedCust = customers.find(c => c.name === customerName);
             
             let autoNumber = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "").trim();
             if (!editId) {
@@ -1299,7 +1378,8 @@
                 type: 'INVOICE LUAR',
                 number: autoNumber,
                 date: extDateVal,
-                client: selectedCust ? selectedCust.name : 'Pelanggan Eksternal',
+                client: selectedCust ? selectedCust.name : customerName,
+                address: selectedCust ? selectedCust.address : '-',
                 total: extTotal,
                 service_category: serviceCat
             };
@@ -1349,36 +1429,221 @@
             }, 300);
         }
 
+        // --- MANAJEMEN HISTORI DAN FILTER REKAP ---
+        let rawHistoryData = [];
+        let filteredHistoryData = [];
+
         async function loadHistory() {
             const historyTableBody = document.getElementById('historyTableBody');
-            historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Memuat data dari Database...</td></tr>`;
+            historyTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Memuat data histori...</td></tr>`;
             
             const { data, error } = await _supabase.from('jsc_history').select('*').order('id', { ascending: false });
             
-            historyTableBody.innerHTML = "";
-            if (error || !data || data.length === 0) {
-                historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">Belum ada riwayat dokumen tersimpan di Database.</td></tr>`;
+            if (error || !data) {
+                historyTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Gagal memuat histori dari Database.</td></tr>`;
+                return;
+            }
+
+            rawHistoryData = data;
+            applyHistoryFilter();
+        }
+
+        function applyHistoryFilter() {
+            const monthVal = document.getElementById('filterMonth').value;
+            const custVal = document.getElementById('filterCustomer').value;
+            const addressVal = document.getElementById('filterAddress').value.toLowerCase().trim();
+            const catVal = document.getElementById('filterCategory').value;
+
+            filteredHistoryData = rawHistoryData.filter(item => {
+                let matchMonth = true;
+                if (monthVal && item.date) {
+                    matchMonth = item.date.startsWith(monthVal);
+                }
+
+                let matchCust = true;
+                if (custVal) {
+                    matchCust = item.client === custVal;
+                }
+
+                let matchAddress = true;
+                if (addressVal) {
+                    matchAddress = (item.address || '').toLowerCase().includes(addressVal);
+                }
+
+                let matchCat = true;
+                if (catVal) {
+                    const itemCat = item.service_category || 'TIKET';
+                    matchCat = itemCat === catVal;
+                }
+
+                return matchMonth && matchCust && matchAddress && matchCat;
+            });
+
+            renderHistoryTable(filteredHistoryData);
+        }
+
+        function renderHistoryTable(data) {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = "";
+
+            let grandTotal = 0;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Tidak ada riwayat dokumen yang cocok dengan filter.</td></tr>`;
+                document.getElementById('rekapCount').innerText = "0 Dokumen";
+                document.getElementById('rekapTotalNominal').innerText = "Rp 0";
                 return;
             }
 
             data.forEach((item) => {
+                grandTotal += (parseFloat(item.total) || 0);
                 const itemJson = encodeURIComponent(JSON.stringify(item));
-                historyTableBody.innerHTML += `
+                const catBadge = (item.service_category === 'HOTEL') ? 
+                    `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700"><i class="fa-solid fa-hotel"></i> Hotel</span>` : 
+                    `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-700"><i class="fa-solid fa-plane"></i> Tiket</span>`;
+
+                tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
-                        <td class="p-3">${item.date || '-'}</td>
+                        <td class="p-3 whitespace-nowrap">${item.date || '-'}</td>
                         <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.type === 'INVOICE' ? 'bg-blue-100 text-blue-700' : (item.type === 'KWITANSI' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700')}">${item.type}</span></td>
                         <td class="p-3 font-semibold">${item.number}</td>
-                        <td class="p-3">${item.client}</td>
-                        <td class="p-3 text-right font-bold text-slate-900">${formatRupiah(item.total)}</td>
-                        <td class="p-3 text-center space-x-1">
-                            <button onclick="editHistoryItem('${itemJson}')" class="text-blue-500 hover:text-blue-700 px-2 py-1" title="Edit Dokumen"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="reprintHistoryItem('${itemJson}', 'print')" class="text-emerald-600 hover:text-emerald-800 px-2 py-1" title="Cetak Ulang"><i class="fa-solid fa-print"></i></button>
-                            <button onclick="reprintHistoryItem('${itemJson}', 'pdf')" class="text-amber-600 hover:text-amber-800 px-2 py-1" title="Download PDF"><i class="fa-solid fa-file-pdf"></i></button>
-                            <button onclick="deleteHistoryItem(${item.id})" class="text-red-500 hover:text-red-700 px-2 py-1" title="Hapus Dokumen"><i class="fa-solid fa-trash"></i></button>
+                        <td class="p-3">${catBadge}</td>
+                        <td class="p-3 font-semibold">${item.client || '-'}</td>
+                        <td class="p-3 text-slate-500 max-w-xs truncate" title="${item.address || '-'}">${item.address || '-'}</td>
+                        <td class="p-3 text-right font-bold text-slate-900 whitespace-nowrap">${formatRupiah(item.total)}</td>
+                        <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                            <button onclick="editHistoryItem('${itemJson}')" class="text-blue-500 hover:text-blue-700 px-1.5 py-1" title="Edit Dokumen"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="reprintHistoryItem('${itemJson}', 'print')" class="text-emerald-600 hover:text-emerald-800 px-1.5 py-1" title="Cetak Ulang"><i class="fa-solid fa-print"></i></button>
+                            <button onclick="reprintHistoryItem('${itemJson}', 'pdf')" class="text-amber-600 hover:text-amber-800 px-1.5 py-1" title="Download PDF"><i class="fa-solid fa-file-pdf"></i></button>
+                            <button onclick="deleteHistoryItem(${item.id})" class="text-red-500 hover:text-red-700 px-1.5 py-1" title="Hapus Dokumen"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
+
+            document.getElementById('rekapCount').innerText = `${data.length} Dokumen`;
+            document.getElementById('rekapTotalNominal').innerText = formatRupiah(grandTotal);
+        }
+
+        // --- EXPORT REKAP KE EXCEL ---
+        function exportRekapExcel() {
+            if (filteredHistoryData.length === 0) {
+                alert("Tidak ada data rekap histori untuk di-export.");
+                return;
+            }
+
+            const excelRows = filteredHistoryData.map((item, idx) => ({
+                "No": idx + 1,
+                "Tanggal": item.date || '-',
+                "Jenis Dokumen": item.type,
+                "No. Dokumen": item.number,
+                "Kategori Layanan": item.service_category === 'HOTEL' ? 'Hotel' : 'Tiket Pesawat',
+                "Nama Pelanggan": item.client,
+                "Alamat Pelanggan": item.address || '-',
+                "Total Nominal (Rp)": parseFloat(item.total) || 0
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(excelRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Histori JSC");
+            XLSX.writeFile(wb, `Rekap-Histori-JSC-${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        // --- EXPORT REKAP KE PDF DENGAN KOP PERUSAHAAN ---
+        async function exportRekapPDF() {
+            if (filteredHistoryData.length === 0) {
+                alert("Tidak ada data rekap histori untuk di-export.");
+                return;
+            }
+
+            const config = await getSettings();
+            let totalNominal = 0;
+
+            let tableRowsHtml = filteredHistoryData.map((item, idx) => {
+                totalNominal += (parseFloat(item.total) || 0);
+                const catText = item.service_category === 'HOTEL' ? 'Hotel' : 'Tiket Pesawat';
+                return `
+                    <tr style="border-bottom: 1px solid #e2e8f0; font-size: 10px;">
+                        <td style="padding: 6px;">${idx + 1}</td>
+                        <td style="padding: 6px;">${item.date || '-'}</td>
+                        <td style="padding: 6px;">${item.type}</td>
+                        <td style="padding: 6px; font-weight: bold;">${item.number}</td>
+                        <td style="padding: 6px;">${catText}</td>
+                        <td style="padding: 6px; font-weight: bold;">${item.client}</td>
+                        <td style="padding: 6px;">${item.address || '-'}</td>
+                        <td style="padding: 6px; text-align: right; font-weight: bold;">${formatRupiah(item.total)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const nowStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+            const logoHtml = config.logoData ? `<img src="${config.logoData}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />` : `<div style="width: 45px; height: 45px; background: #2563eb; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 50%;">JSC</div>`;
+
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.padding = '15mm';
+            pdfContainer.style.background = '#ffffff';
+            pdfContainer.style.fontFamily = 'sans-serif';
+            pdfContainer.style.color = '#1e293b';
+
+            pdfContainer.innerHTML = `
+                <!-- Kop Perusahaan -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        ${logoHtml}
+                        <div>
+                            <h2 style="margin: 0; font-size: 16px; font-weight: 900; color: #0f172a;">${config.companyName}</h2>
+                            <p style="margin: 2px 0 0 0; font-size: 11px; font-weight: bold; color: #2563eb;">${config.companyLegal}</p>
+                            <p style="margin: 2px 0 0 0; font-size: 9px; color: #64748b;">${config.companyAddress}</p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #2563eb;">LAPORAN REKAPITULASI</h3>
+                        <p style="margin: 4px 0 0 0; font-size: 10px; color: #64748b;">Dicetak: ${nowStr}</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px; font-size: 10px; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                    <div><strong>Total Transaksi:</strong> ${filteredHistoryData.length} Dokumen</div>
+                    <div><strong>Total Rekap Nominal:</strong> <span style="color: #059669; font-weight: bold; font-size: 11px;">${formatRupiah(totalNominal)}</span></div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; text-align: left; margin-bottom: 20px;">
+                    <thead>
+                        <tr style="background-color: #0f172a; color: white; font-size: 10px;">
+                            <th style="padding: 6px;">No</th>
+                            <th style="padding: 6px;">Tanggal</th>
+                            <th style="padding: 6px;">Jenis</th>
+                            <th style="padding: 6px;">No. Dokumen</th>
+                            <th style="padding: 6px;">Kategori</th>
+                            <th style="padding: 6px;">Pelanggan</th>
+                            <th style="padding: 6px;">Alamat</th>
+                            <th style="padding: 6px; text-align: right;">Total Nominal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRowsHtml}
+                    </tbody>
+                </table>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-size: 9px; color: #64748b;">
+                    <div>Dokumen ini direkap resmi oleh sistem JSC Tour & Travel.</div>
+                    <div style="text-align: center;">
+                        <p style="margin: 0 0 35px 0; font-size: 10px; color: #1e293b;">Direktur,</p>
+                        <p style="margin: 0; font-weight: bold; font-size: 10px; color: #0f172a;">${config.directorName}</p>
+                        <p style="margin: 0;">${config.companyLegal}</p>
+                    </div>
+                </div>
+            `;
+
+            const options = {
+                margin: 0,
+                filename: `Laporan-Rekap-JSC-${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().from(pdfContainer).set(options).save();
         }
 
         async function editHistoryItem(encodedItem) {
@@ -1412,11 +1677,7 @@
                 document.getElementById('extTotal').value = item.total;
 
                 await loadCustomerDropdown();
-                const customers = await getCustomers();
-                const matchedCust = customers.find(c => c.name === item.client);
-                if (matchedCust) {
-                    document.getElementById('extSelectCustomer').value = matchedCust.id;
-                }
+                document.getElementById('extSelectCustomer').value = item.client;
                 updateExtDate();
 
                 const config = await getSettings();
@@ -1442,6 +1703,10 @@
                 document.getElementById('cancelEditBtn').classList.remove('hidden');
                 
                 document.getElementById('docType').value = (item.type === 'KWITANSI') ? 'KWITANSI' : 'INVOICE';
+                if (item.service_category) {
+                    document.getElementById('serviceCategory').value = item.service_category;
+                    updateServiceCategory();
+                }
                 
                 const type = document.getElementById('docType').value;
                 const kwitansiField = document.getElementById('kwitansiField');
@@ -1467,6 +1732,7 @@
                 document.getElementById('docNumber').value = item.number;
                 if (item.date) document.getElementById('docDate').value = item.date;
                 document.getElementById('clientName').value = item.client;
+                if (item.address) document.getElementById('clientAddress').value = item.address;
                 
                 const firstPrice = document.querySelector('.price-input');
                 if (firstPrice) firstPrice.value = item.total;
@@ -1489,11 +1755,7 @@
                 document.getElementById('extTotal').value = item.total;
                 
                 await loadCustomerDropdown();
-                const customers = await getCustomers();
-                const matchedCust = customers.find(c => c.name === item.client);
-                if (matchedCust) {
-                    document.getElementById('extSelectCustomer').value = matchedCust.id;
-                }
+                document.getElementById('extSelectCustomer').value = item.client;
                 updateExtDate();
 
                 setTimeout(() => {
@@ -1521,10 +1783,15 @@
             } else {
                 document.getElementById('editRecordId').value = item.id;
                 document.getElementById('docType').value = (item.type === 'KWITANSI') ? 'KWITANSI' : 'INVOICE';
+                if (item.service_category) {
+                    document.getElementById('serviceCategory').value = item.service_category;
+                    updateServiceCategory();
+                }
                 updateDocType();
                 document.getElementById('docNumber').value = item.number;
                 if (item.date) document.getElementById('docDate').value = item.date;
                 document.getElementById('clientName').value = item.client;
+                if (item.address) document.getElementById('clientAddress').value = item.address;
                 
                 const firstPrice = document.querySelector('.price-input');
                 if (firstPrice) firstPrice.value = item.total;
