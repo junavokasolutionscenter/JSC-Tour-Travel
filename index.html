@@ -609,6 +609,7 @@
         function showLoginScreen() {
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('flex');
             document.getElementById('btnLoginSubmit').innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi';
         }
 
@@ -1277,10 +1278,8 @@
             }
         }
 
-        // Cek Login Saat Halaman Pertama Dimuat
-        window.onload = function() {
-            checkUserSession();
-        };
+        // Langsung cek sesi login saat script dieksekusi di awal
+        checkUserSession();
     </script>
 </body>
 </html>
