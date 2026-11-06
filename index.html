@@ -464,11 +464,11 @@
                 </div>
             </div>
 
-            <!-- TAB DATA PELANGGAN -->
+            <!-- TAB DATA PELANGGAN (SINKRON SUPABASE) -->
             <div id="tab-customers" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-4xl mx-auto">
                 <div class="flex justify-between items-center mb-6 pb-2 border-b">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-users text-blue-600"></i> Daftar Data Pelanggan</h2>
+                        <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-users text-blue-600"></i> Daftar Data Pelanggan (Cloud Supabase)</h2>
                         <p class="text-xs text-slate-500">Kelola buku kontak pelanggan agar mudah dipilih saat membuat dokumen.</p>
                     </div>
                 </div>
@@ -737,51 +737,48 @@
             }
         }
 
-        function getCustomers() {
-            let customers = JSON.parse(localStorage.getItem('jsc_customers'));
-            if (!customers) {
-                customers = [
-                    { name: "Bpk. Budi Santoso", address: "Jl. Jenderal Sudirman No. 123, Palembang" },
-                    { name: "Ibu Siti Aminah", address: "Jl. Kolonel H. Barlian No. 45, Palembang" }
-                ];
-                localStorage.setItem('jsc_customers', JSON.stringify(customers));
-            }
-            return customers;
+        // --- DATA PELANGGAN VIA CLOUD SUPABASE ---
+        async function getCustomers() {
+            const { data, error } = await _supabase.from('jsc_customers').select('*').order('name', { ascending: true });
+            if (error || !data) return [];
+            return data;
         }
 
-        function loadCustomerDropdown() {
+        async function loadCustomerDropdown() {
             const selects = [document.getElementById('selectCustomer'), document.getElementById('extSelectCustomer')];
-            const customers = getCustomers();
+            const customers = await getCustomers();
             selects.forEach(sel => {
                 if (sel) {
                     sel.innerHTML = '<option value="">-- Pilih dari Daftar Pelanggan --</option>';
-                    customers.forEach((c, index) => {
-                        sel.innerHTML += `<option value="${index}">${c.name}</option>`;
+                    customers.forEach((c) => {
+                        sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
                     });
                 }
             });
         }
 
-        function onSelectCustomer(index) {
-            if (index === "") return;
-            const customers = getCustomers();
-            const cust = customers[index];
+        async function onSelectCustomer(id) {
+            if (id === "") return;
+            const customers = await getCustomers();
+            const cust = customers.find(c => c.id == id);
             if (cust) {
                 document.getElementById('clientName').value = cust.name;
                 document.getElementById('clientAddress').value = cust.address;
-                document.getElementById('receivedFrom').value = cust.name;
+                const recFrom = document.getElementById('receivedFrom');
+                if (recFrom) recFrom.value = cust.name;
                 generatePreview();
             }
         }
 
         function updateExtCustomerName() {}
 
-        function loadCustomerTable() {
+        async function loadCustomerTable() {
             const tbody = document.getElementById('customerTableBody');
-            const customers = getCustomers();
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Memuat data pelanggan...</td></tr>`;
+            const customers = await getCustomers();
             tbody.innerHTML = "";
             if (customers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Belum ada data pelanggan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400">Belum ada data pelanggan di Cloud.</td></tr>`;
                 return;
             }
             customers.forEach((c, index) => {
@@ -791,35 +788,41 @@
                         <td class="p-3 font-semibold">${c.name}</td>
                         <td class="p-3">${c.address}</td>
                         <td class="p-3 text-center">
-                            <button onclick="deleteCustomer(${index})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteCustomer(${c.id})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function addCustomer() {
+        async function addCustomer() {
             const name = document.getElementById('newCustName').value.trim();
             const address = document.getElementById('newCustAddress').value.trim();
             if (!name || !address) return;
 
-            let customers = getCustomers();
-            customers.push({ name, address });
-            localStorage.setItem('jsc_customers', JSON.stringify(customers));
+            const { error } = await _supabase.from('jsc_customers').insert([{ name, address }]);
+            if (error) {
+                alert("Gagal menyimpan pelanggan: " + error.message);
+                return;
+            }
 
             document.getElementById('newCustName').value = '';
             document.getElementById('newCustAddress').value = '';
-            loadCustomerTable();
-            loadCustomerDropdown();
-            alert("Pelanggan berhasil ditambahkan!");
+            await loadCustomerTable();
+            await loadCustomerDropdown();
+            alert("Pelanggan berhasil disimpan ke Cloud Supabase!");
         }
 
-        function deleteCustomer(index) {
-            let customers = getCustomers();
-            customers.splice(index, 1);
-            localStorage.setItem('jsc_customers', JSON.stringify(customers));
-            loadCustomerTable();
-            loadCustomerDropdown();
+        async function deleteCustomer(id) {
+            if (confirm("Apakah Anda yakin ingin menghapus pelanggan ini?")) {
+                const { error } = await _supabase.from('jsc_customers').delete().eq('id', id);
+                if (error) {
+                    alert("Gagal menghapus: " + error.message);
+                    return;
+                }
+                await loadCustomerTable();
+                await loadCustomerDropdown();
+            }
         }
 
         function generateAutoNumber() {
@@ -1187,7 +1190,7 @@
 
         async function saveExtRecord() {
             const fileInput = document.getElementById('extFile');
-            const customerIndex = document.getElementById('extSelectCustomer').value;
+            const customerId = document.getElementById('extSelectCustomer').value;
             const extTotal = parseFloat(document.getElementById('extTotal').value) || 0;
             const extDateVal = document.getElementById('extDocDate').value;
 
@@ -1195,25 +1198,25 @@
                 alert("Harap lampirkan file invoice terlebih dahulu.");
                 return null;
             }
-            if (customerIndex === "") {
+            if (customerId === "") {
                 alert("Harap pilih data pemesan.");
                 return null;
             }
 
-            const customers = getCustomers();
-            const selectedCust = customers[customerIndex];
+            const customers = await getCustomers();
+            const selectedCust = customers.find(c => c.id == customerId);
             const autoNumber = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "");
 
             const newRecord = {
                 type: 'INVOICE LUAR',
                 number: autoNumber,
                 date: extDateVal,
-                client: selectedCust.name,
+                client: selectedCust ? selectedCust.name : 'Pelanggan Eksternal',
                 total: extTotal
             };
 
             await _supabase.from('jsc_history').insert([newRecord]);
-            return selectedCust.name;
+            return selectedCust ? selectedCust.name : 'Pelanggan Eksternal';
         }
 
         async function printSinglePageExternal() {
