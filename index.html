@@ -612,7 +612,7 @@
 
         async function handleLogout() {
             await _supabase.auth.signOut();
-            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.add('hidden');
         }
 
@@ -623,7 +623,7 @@
                 document.getElementById('mainApp').classList.remove('hidden');
                 initApp();
             } else {
-                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('authScreen').classList.add('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
             }
         }
@@ -1316,16 +1316,52 @@
 
         function editHistoryItem(encodedItem) {
             const item = JSON.parse(decodeURIComponent(encodedItem));
-            switchTab('generator');
+            
+            // 1. Tampilkan tab generator secara manual tanpa memanggil fungsi switchTab yang mereset form
+            const genTab = document.getElementById('tab-generator');
+            const extTab = document.getElementById('tab-external');
+            const custTab = document.getElementById('tab-customers');
+            const setTab = document.getElementById('tab-settings');
+            const histTab = document.getElementById('tab-history');
+            
+            [genTab, extTab, custTab, setTab, histTab].forEach(t => t.classList.add('hidden'));
+            genTab.classList.remove('hidden');
 
+            ['nav-generator', 'nav-external', 'nav-customers', 'nav-settings', 'nav-history'].forEach(id => {
+                document.getElementById(id).className = "px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
+            });
+            document.getElementById('nav-generator').className = "px-3 py-2 bg-blue-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5";
+
+            // 2. Set nilai edit dan mode edit
             document.getElementById('editRecordId').value = item.id;
             document.getElementById('formModeBadge').classList.remove('hidden');
             document.getElementById('cancelEditBtn').classList.remove('hidden');
             
             document.getElementById('docType').value = (item.type === 'KWITANSI') ? 'KWITANSI' : 'INVOICE';
-            updateDocType();
+            
+            // Atur tampilan form berdasarkan jenis dokumen tanpa mereset nomor
+            const type = document.getElementById('docType').value;
+            const kwitansiField = document.getElementById('kwitansiField');
+            const invoiceFields = document.getElementById('invoiceFields');
+            const previewInvoiceSec = document.getElementById('previewInvoiceSection');
+            const previewKwitansiSec = document.getElementById('previewKwitansiSection');
+            const previewTotalSec = document.getElementById('previewTotalSection');
 
-            // Memastikan nomor dokumen yang dimuat tetap sama persis dengan histori
+            if (type === 'KWITANSI') {
+                kwitansiField.classList.remove('hidden');
+                invoiceFields.classList.add('hidden');
+                previewInvoiceSec.classList.add('hidden');
+                previewKwitansiSec.classList.remove('hidden');
+                previewTotalSec.classList.add('hidden');
+            } else {
+                kwitansiField.classList.add('hidden');
+                invoiceFields.classList.remove('hidden');
+                previewInvoiceSec.classList.remove('hidden');
+                previewKwitansiSec.classList.add('hidden');
+                previewTotalSec.classList.remove('hidden');
+            }
+
+            // 3. Masukkan nomor dokumen asli tanpa ter-overwrite nomor baru
             document.getElementById('docNumber').value = item.number;
             if (item.date) document.getElementById('docDate').value = item.date;
             document.getElementById('clientName').value = item.client;
@@ -1333,6 +1369,7 @@
             const firstPrice = document.querySelector('.price-input');
             if (firstPrice) firstPrice.value = item.total;
 
+            loadCustomerDropdown();
             generatePreview();
         }
 
