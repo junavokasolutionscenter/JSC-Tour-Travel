@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSC Tour & Travel - Invoice & Kwitansi Generator</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> <!-- Menggunakan Tailwind modern / CDN terupdate -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2pdf.js Library untuk Export PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -397,7 +396,8 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Pilih File (PDF / Gambar)</label>
-                            <input type="file" id="extFile" accept=".pdf,image/*" onchange="embedFileToDocument(this)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                            <input type="file" id="extFile" accept=".pdf,image/*" onchange="embedFileToDocument(this)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                            <p class="text-[10px] text-slate-400 mt-1" id="extFileHint">Opsional saat mode edit jika file tidak ingin diubah.</p>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Tanggal Dokumen Luar</label>
@@ -627,7 +627,7 @@
 
         async function handleLogout() {
             await _supabase.auth.signOut();
-            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.add('hidden');
         }
 
@@ -1261,7 +1261,7 @@
             const extTotal = parseFloat(document.getElementById('extTotal').value) || 0;
             const extDateVal = document.getElementById('extDocDate').value;
             const editId = document.getElementById('extEditRecordId').value;
-            const serviceCat = document.getElementById('extServiceCategory').value; // TIKET atau HOTEL
+            const serviceCat = document.getElementById('extServiceCategory').value;
 
             if (!fileInput.files || !fileInput.files[0] && !editId) {
                 alert("Harap lampirkan file invoice terlebih dahulu.");
@@ -1282,7 +1282,7 @@
                 date: extDateVal,
                 client: selectedCust ? selectedCust.name : 'Pelanggan Eksternal',
                 total: extTotal,
-                service_category: serviceCat // Menyimpan kategori layanan eksternal
+                service_category: serviceCat
             };
 
             if (editId) {
@@ -1361,9 +1361,7 @@
         async function editHistoryItem(encodedItem) {
             const item = JSON.parse(decodeURIComponent(encodedItem));
             
-            // Periksa apakah ini dokumen Invoice Luar atau Internal
             if (item.type === 'INVOICE LUAR') {
-                // Buka tab Upload Invoice Luar
                 const genTab = document.getElementById('tab-generator');
                 const extTab = document.getElementById('tab-external');
                 const custTab = document.getElementById('tab-customers');
@@ -1386,6 +1384,7 @@
                     document.getElementById('extServiceCategory').value = item.service_category;
                 }
 
+                // Memastikan nomor dokumen eksternal tidak berubah/di-overwrite oleh auto-number
                 document.getElementById('extPrevDocNumber').innerText = "No: " + item.number;
                 if (item.date) document.getElementById('extDocDate').value = item.date;
                 document.getElementById('extTotal').value = item.total;
@@ -1398,8 +1397,10 @@
                 }
                 updateExtDate();
 
+                const config = await getSettings();
+                generateQRCode(`VALID-EXT|${config.companyName}|${item.number}|Direktur:${config.directorName}`, "extQrcode", "80");
+
             } else {
-                // Dokumen Internal (Invoice / Kwitansi)
                 const genTab = document.getElementById('tab-generator');
                 const extTab = document.getElementById('tab-external');
                 const custTab = document.getElementById('tab-customers');
