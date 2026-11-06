@@ -627,7 +627,7 @@
 
         async function handleLogout() {
             await _supabase.auth.signOut();
-            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
         }
 
@@ -1129,7 +1129,14 @@
             await generatePreview();
             const editId = document.getElementById('editRecordId').value;
             const docType = document.getElementById('docType').value;
-            const docNumber = document.getElementById('docNumber').value;
+            
+            let docNumber = document.getElementById('docNumber').value;
+            if (!editId) {
+                docNumber = await generateAutoNumber();
+                document.getElementById('docNumber').value = docNumber;
+                document.getElementById('previewDocNumber').innerText = "No: " + docNumber;
+            }
+
             const docDate = document.getElementById('docDate').value;
             const clientName = document.getElementById('clientName').value || 'Pelanggan Umum';
             const total = docType === 'INVOICE' ? calculateTotal() : (parseFloat(document.querySelector('.price-input')?.value) || 1500000);
@@ -1152,7 +1159,7 @@
             }
 
             window.print();
-            await initFormNumber();
+            if (!editId) await initFormNumber();
         }
 
         async function downloadPDFInternal() {
@@ -1163,7 +1170,14 @@
             const catName = serviceCat === 'TIKET' ? 'Pesawat' : 'Hotel';
             const clientNameInput = document.getElementById('clientName').value.trim() || 'Pelanggan-Umum';
             const cleanClientName = clientNameInput.replace(/[^a-zA-Z0-9]/g, '-');
-            const docNumber = document.getElementById('docNumber').value;
+            
+            let docNumber = document.getElementById('docNumber').value;
+            if (!editId) {
+                docNumber = await generateAutoNumber();
+                document.getElementById('docNumber').value = docNumber;
+                document.getElementById('previewDocNumber').innerText = "No: " + docNumber;
+            }
+
             const docDate = document.getElementById('docDate').value;
             const total = docType === 'INVOICE' ? calculateTotal() : (parseFloat(document.querySelector('.price-input')?.value) || 1500000);
 
@@ -1195,7 +1209,7 @@
             };
 
             html2pdf().from(element).set(options).save();
-            await initFormNumber();
+            if (!editId) await initFormNumber();
         }
 
         async function initExternalDoc() {
@@ -1274,7 +1288,12 @@
 
             const customers = await getCustomers();
             const selectedCust = customers.find(c => c.id == customerId);
-            const autoNumber = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "");
+            
+            let autoNumber = document.getElementById('extPrevDocNumber').innerText.replace("No: ", "").trim();
+            if (!editId) {
+                autoNumber = await generateAutoNumber();
+                document.getElementById('extPrevDocNumber').innerText = "No: " + autoNumber;
+            }
 
             const recordData = {
                 type: 'INVOICE LUAR',
@@ -1301,13 +1320,15 @@
         }
 
         async function printSinglePageExternal() {
+            const editId = document.getElementById('extEditRecordId').value;
             const res = await saveExtRecord();
             if (!res) return;
             setTimeout(() => { window.print(); }, 300);
-            await initExternalDoc();
+            if (!editId) await initExternalDoc();
         }
 
         async function downloadPDFSinglePageExternal() {
+            const editId = document.getElementById('extEditRecordId').value;
             const res = await saveExtRecord();
             if (!res) return;
             const cleanCustName = res.custName.replace(/[^a-zA-Z0-9]/g, '-');
@@ -1322,8 +1343,10 @@
                 html2canvas: { scale: 2, useCORS: true, logging: false },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-            setTimeout(() => { html2pdf().from(element).set(options).save(); }, 300);
-            await initExternalDoc();
+            setTimeout(() => { 
+                html2pdf().from(element).set(options).save(); 
+                if (!editId) initExternalDoc();
+            }, 300);
         }
 
         async function loadHistory() {
@@ -1384,7 +1407,6 @@
                     document.getElementById('extServiceCategory').value = item.service_category;
                 }
 
-                // Memastikan nomor dokumen eksternal tidak berubah/di-overwrite oleh auto-number
                 document.getElementById('extPrevDocNumber').innerText = "No: " + item.number;
                 if (item.date) document.getElementById('extDocDate').value = item.date;
                 document.getElementById('extTotal').value = item.total;
