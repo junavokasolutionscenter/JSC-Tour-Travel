@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSC Tour & Travel - Invoice & Kwitansi Generator</title>
+    
+    <!-- 1. Database Client Supabase (Diletakkan di paling atas agar stabil di semua seluler) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jsPDF & html2pdf.js Library untuk Export PDF -->
@@ -19,8 +23,6 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         }
     </script>
-    <!-- Database Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -706,13 +708,20 @@
         }
 
         async function checkSession() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                document.getElementById('authScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                initApp();
-            } else {
-                document.getElementById('authScreen').classList.add('hidden');
+            try {
+                const { data: { session }, error } = await _supabase.auth.getSession();
+                if (error) throw error;
+                if (session) {
+                    document.getElementById('authScreen').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    initApp();
+                } else {
+                    document.getElementById('authScreen').classList.remove('hidden');
+                    document.getElementById('mainApp').classList.add('hidden');
+                }
+            } catch (err) {
+                console.error("Gagal memeriksa sesi:", err);
+                document.getElementById('authScreen').classList.remove('hidden');
                 document.getElementById('mainApp').classList.add('hidden');
             }
         }
