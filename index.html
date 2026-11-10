@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSC Tour & Travel - Invoice & Kwitansi Generator</title>
     
-    <!-- 1. Database Client Supabase (Diletakkan di paling atas agar stabil di semua seluler) -->
+    <!-- 1. Database Client Supabase (Stabilitas Jaringan Seluler) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Tailwind CSS -->
@@ -576,7 +576,7 @@
                             <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
                                 <i class="fa-solid fa-filter text-blue-600"></i> Sortir & Rekap Data Histori
                             </h2>
-                            <p class="text-xs text-slate-500">Filter transaksi berdasarkan bulan, nama pelanggan, alamat, atau kategori layanan.</p>
+                            <p class="text-xs text-slate-500">Filter transaksi berdasarkan rentang tanggal, nama pelanggan, alamat, atau kategori layanan.</p>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button onclick="exportRekapExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
@@ -591,20 +591,28 @@
                         </div>
                     </div>
 
-                    <!-- Input Filter -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                    <!-- Input Filter (Termasuk Filter Rentang Hari/Tanggal) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 mb-6">
                         <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Sortir Bulan / Tahun</label>
-                            <input type="month" id="filterMonth" onchange="applyHistoryFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Sortir Bulan/Tahun</label>
+                            <input type="month" id="filterMonth" onchange="resetDateRangeAndFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Sortir Nama Pelanggan</label>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Dari Tanggal</label>
+                            <input type="date" id="filterStartDate" onchange="resetMonthAndFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Sampai Tanggal</label>
+                            <input type="date" id="filterEndDate" onchange="resetMonthAndFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Pelanggan</label>
                             <select id="filterCustomer" onchange="applyHistoryFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
                                 <option value="">-- Semua Pelanggan --</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Pilih Alamat Pelanggan</label>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Pilih Alamat</label>
                             <select id="filterAddressSelect" onchange="applyHistoryFilter()" class="w-full rounded-lg border-slate-300 border px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
                                 <option value="">-- Semua Alamat --</option>
                             </select>
@@ -623,8 +631,8 @@
                         </div>
                     </div>
 
-                    <!-- Ringkasan Rekap Card -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                    <!-- Ringkasan Rekap Card & Tombol Reset Filter -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 items-center">
                         <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
                                 <i class="fa-solid fa-file-invoice"></i>
@@ -634,7 +642,7 @@
                                 <p id="rekapCount" class="text-lg font-black text-slate-800">0 Dokumen</p>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-3 md:col-span-2">
+                        <div class="flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
                                 <i class="fa-solid fa-money-bill-wave"></i>
                             </div>
@@ -643,14 +651,22 @@
                                 <p id="rekapTotalNominal" class="text-xl font-black text-emerald-600">Rp 0</p>
                             </div>
                         </div>
+                        <div class="flex justify-end">
+                            <button type="button" onclick="resetAllFilters()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Tabel Histori Data -->
+                    <!-- Tabel Histori Data dengan Checkbox Multi-Select -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-700">
-                                    <th class="p-3 rounded-l-lg">Tanggal</th>
+                                    <th class="p-3 rounded-l-lg text-center w-10">
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer" title="Pilih Semua">
+                                    </th>
+                                    <th class="p-3">Tanggal</th>
                                     <th class="p-3">Jenis</th>
                                     <th class="p-3">No. Dokumen</th>
                                     <th class="p-3">Kategori</th>
@@ -1486,9 +1502,10 @@
             }, 300);
         }
 
-        // --- MANAJEMEN HISTORI DAN FILTER REKAP ---
+        // --- MANAJEMEN HISTORI, CHECKBOX, DAN FILTER RENTANG TANGGAL ---
         let rawHistoryData = [];
         let filteredHistoryData = [];
+        let selectedRowIds = new Set();
 
         function getResolvedAddress(item) {
             if (item.address && item.address.trim() !== '' && item.address.trim() !== '-') {
@@ -1502,31 +1519,75 @@
 
         async function loadHistory() {
             const historyTableBody = document.getElementById('historyTableBody');
-            historyTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Memuat data histori...</td></tr>`;
+            historyTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Memuat data histori...</td></tr>`;
             
             await getCustomers();
             const { data, error } = await _supabase.from('jsc_history').select('*').order('id', { ascending: false });
             
             if (error || !data) {
-                historyTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Gagal memuat histori dari Database.</td></tr>`;
+                historyTableBody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Gagal memuat histori dari Database.</td></tr>`;
                 return;
             }
 
             rawHistoryData = data;
+            selectedRowIds.clear();
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            if (selectAllCb) selectAllCb.checked = false;
+            
+            applyHistoryFilter();
+        }
+
+        function resetDateRangeAndFilter() {
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            applyHistoryFilter();
+        }
+
+        function resetMonthAndFilter() {
+            document.getElementById('filterMonth').value = '';
+            applyHistoryFilter();
+        }
+
+        function resetAllFilters() {
+            document.getElementById('filterMonth').value = '';
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterCustomer').value = '';
+            if (document.getElementById('filterAddressSelect')) document.getElementById('filterAddressSelect').value = '';
+            document.getElementById('filterAddress').value = '';
+            document.getElementById('filterCategory').value = '';
             applyHistoryFilter();
         }
 
         function applyHistoryFilter() {
             const monthVal = document.getElementById('filterMonth').value;
+            const startDateVal = document.getElementById('filterStartDate').value;
+            const endDateVal = document.getElementById('filterEndDate').value;
+            
             const custVal = document.getElementById('filterCustomer').value;
             const addressSelectVal = document.getElementById('filterAddressSelect')?.value || '';
             const addressVal = document.getElementById('filterAddress').value.toLowerCase().trim();
             const catVal = document.getElementById('filterCategory').value;
 
             filteredHistoryData = rawHistoryData.filter(item => {
-                let matchMonth = true;
+                // Filter Bulan / Tahun
+                let matchDateRange = true;
                 if (monthVal && item.date) {
-                    matchMonth = item.date.startsWith(monthVal);
+                    matchDateRange = item.date.startsWith(monthVal);
+                } 
+                // Filter Rentang Hari (Dari Tanggal - Sampai Tanggal)
+                else if (startDateVal || endDateVal) {
+                    if (item.date) {
+                        if (startDateVal && endDateVal) {
+                            matchDateRange = (item.date >= startDateVal && item.date <= endDateVal);
+                        } else if (startDateVal) {
+                            matchDateRange = (item.date >= startDateVal);
+                        } else if (endDateVal) {
+                            matchDateRange = (item.date <= endDateVal);
+                        }
+                    } else {
+                        matchDateRange = false;
+                    }
                 }
 
                 let matchCust = true;
@@ -1552,27 +1613,73 @@
                     matchCat = itemCat === catVal;
                 }
 
-                return matchMonth && matchCust && matchAddressSel && matchAddressInput && matchCat;
+                return matchDateRange && matchCust && matchAddressSel && matchAddressInput && matchCat;
             });
 
             renderHistoryTable(filteredHistoryData);
+        }
+
+        function toggleSelectAll(masterCheckbox) {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = masterCheckbox.checked;
+                const id = parseInt(cb.getAttribute('data-id'), 10);
+                if (masterCheckbox.checked) {
+                    selectedRowIds.add(id);
+                } else {
+                    selectedRowIds.delete(id);
+                }
+            });
+            updateSelectedSummary();
+        }
+
+        function toggleRowSelect(cb, id) {
+            if (cb.checked) {
+                selectedRowIds.add(id);
+            } else {
+                selectedRowIds.delete(id);
+            }
+            
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            const allChecked = Array.from(checkboxes).every(c => c.checked);
+            const selectAllCb = document.getElementById('selectAllCheckbox');
+            if (selectAllCb) selectAllCb.checked = allChecked;
+
+            updateSelectedSummary();
+        }
+
+        function updateSelectedSummary() {
+            let targetData = getActiveExportData();
+            let grandTotal = 0;
+            targetData.forEach(item => {
+                grandTotal += (parseFloat(item.total) || 0);
+            });
+
+            const suffix = selectedRowIds.size > 0 ? ` (Terpilih ${selectedRowIds.size})` : '';
+            document.getElementById('rekapCount').innerText = `${targetData.length} Dokumen${suffix}`;
+            document.getElementById('rekapTotalNominal').innerText = formatRupiah(grandTotal);
+        }
+
+        function getActiveExportData() {
+            if (selectedRowIds.size > 0) {
+                return filteredHistoryData.filter(item => selectedRowIds.has(item.id));
+            }
+            return filteredHistoryData;
         }
 
         function renderHistoryTable(data) {
             const tbody = document.getElementById('historyTableBody');
             tbody.innerHTML = "";
 
-            let grandTotal = 0;
-
             if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Tidak ada riwayat dokumen yang cocok dengan filter.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Tidak ada riwayat dokumen yang cocok dengan filter.</td></tr>`;
                 document.getElementById('rekapCount').innerText = "0 Dokumen";
                 document.getElementById('rekapTotalNominal').innerText = "Rp 0";
                 return;
             }
 
             data.forEach((item) => {
-                grandTotal += (parseFloat(item.total) || 0);
+                const isChecked = selectedRowIds.has(item.id) ? 'checked' : '';
                 const itemJson = encodeURIComponent(JSON.stringify(item));
                 const catBadge = (item.service_category === 'HOTEL') ? 
                     `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700"><i class="fa-solid fa-hotel"></i> Hotel</span>` : 
@@ -1582,6 +1689,9 @@
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-center">
+                            <input type="checkbox" data-id="${item.id}" ${isChecked} onchange="toggleRowSelect(this, ${item.id})" class="row-checkbox w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                        </td>
                         <td class="p-3 whitespace-nowrap">${item.date || '-'}</td>
                         <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.type === 'INVOICE' ? 'bg-blue-100 text-blue-700' : (item.type === 'KWITANSI' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700')}">${item.type}</span></td>
                         <td class="p-3 font-semibold">${item.number}</td>
@@ -1599,18 +1709,18 @@
                 `;
             });
 
-            document.getElementById('rekapCount').innerText = `${data.length} Dokumen`;
-            document.getElementById('rekapTotalNominal').innerText = formatRupiah(grandTotal);
+            updateSelectedSummary();
         }
 
-        // --- EXPORT REKAP KE EXCEL ---
+        // --- EXPORT REKAP KE EXCEL (Mendukung Ceklis Terpilih) ---
         function exportRekapExcel() {
-            if (filteredHistoryData.length === 0) {
+            const dataToExport = getActiveExportData();
+            if (dataToExport.length === 0) {
                 alert("Tidak ada data rekap histori untuk di-export.");
                 return;
             }
 
-            const excelRows = filteredHistoryData.map((item, idx) => ({
+            const excelRows = dataToExport.map((item, idx) => ({
                 "No": idx + 1,
                 "Tanggal": item.date || '-',
                 "Jenis Dokumen": item.type,
@@ -1627,9 +1737,10 @@
             XLSX.writeFile(wb, `Rekap-Histori-JSC-${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
-        // --- EXPORT REKAP KE PDF DENGAN PAGE X OF Y & QR CODE CANVAS ---
+        // --- EXPORT REKAP KE PDF (Mendukung Ceklis Terpilih) ---
         async function exportRekapPDF() {
-            if (filteredHistoryData.length === 0) {
+            const dataToExport = getActiveExportData();
+            if (dataToExport.length === 0) {
                 alert("Tidak ada data rekap histori untuk di-export.");
                 return;
             }
@@ -1637,7 +1748,7 @@
             const config = await getSettings();
             let totalNominal = 0;
 
-            let tableRowsHtml = filteredHistoryData.map((item, idx) => {
+            let tableRowsHtml = dataToExport.map((item, idx) => {
                 totalNominal += (parseFloat(item.total) || 0);
                 const catText = item.service_category === 'HOTEL' ? 'Hotel' : 'Tiket Pesawat';
                 const finalAddress = getResolvedAddress(item);
@@ -1658,11 +1769,11 @@
             const nowStr = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
             const logoHtml = config.logoData ? `<img src="${config.logoData}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" />` : `<div style="width: 45px; height: 45px; background: #2563eb; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 50%;">JSC</div>`;
 
-            // Buat QR Code Canvas untuk PDF Rekap
+            // QR Code Canvas untuk PDF Rekap
             const tempQrDiv = document.createElement('div');
             try {
                 const qr = qrcode(0, 'M');
-                qr.addData(`REKAP-VALID|${config.companyName}|TotalTx:${filteredHistoryData.length}|TotalNominal:${formatRupiah(totalNominal)}|Dir:${config.directorName}`);
+                qr.addData(`REKAP-VALID|${config.companyName}|TotalTx:${dataToExport.length}|TotalNominal:${formatRupiah(totalNominal)}|Dir:${config.directorName}`);
                 qr.make();
                 tempQrDiv.innerHTML = qr.createImgTag(3, 2);
                 const qrImg = tempQrDiv.querySelector('img');
@@ -1698,7 +1809,7 @@
                 </div>
 
                 <div style="margin-bottom: 16px; font-size: 10px; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
-                    <div><strong>Total Transaksi:</strong> ${filteredHistoryData.length} Dokumen</div>
+                    <div><strong>Total Transaksi:</strong> ${dataToExport.length} Dokumen</div>
                     <div><strong>Total Rekap Nominal:</strong> <span style="color: #059669; font-weight: bold; font-size: 11px;">${formatRupiah(totalNominal)}</span></div>
                 </div>
 
@@ -1747,7 +1858,6 @@
                 pagebreak: { mode: ['css', 'legacy'] }
             };
 
-            // Tambahkan footer otomatis "Page X of Y" pada setiap halaman PDF
             html2pdf().from(pdfContainer).set(options).toPdf().get('pdf').then(function(pdf) {
                 const totalPages = pdf.internal.getNumberOfPages();
                 for (let i = 1; i <= totalPages; i++) {
